@@ -52,6 +52,43 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char *args) {
+  int steps = 1, retval = 1;
+  if (args) {
+    steps = atoi((const char *)args);
+    retval = steps;
+    if (steps < 1) {
+      steps = 1;
+    }
+  }
+  cpu_exec(steps);
+  return retval;
+}
+
+static int cmd_i(char *args) {
+  if (args[0] == 'r') {
+    isa_reg_display();
+  }
+  else if (args[0] == 'w') {
+  }
+}
+
+static int cmd_x(char *args) {
+
+}
+
+static int cmd_p(char *args) {
+
+}
+
+static int cmd_w(char *args) {
+
+}
+
+static int cmd_d(char *args) {
+
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -63,7 +100,13 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
 
-  /* TODO: Add more commands */
+  /* TODO: Add more args */
+  { "si", "Step into a function call(step instruction)", cmd_si},
+  { "info", "Information of registers and watch points", cmd_i},
+  { "x", "Scan memory", cmd_x},
+  { "p", "Print value of expr", cmd_p},
+  { "w", "Set watch points", cmd_w},
+  { "d", "Delete watchpoints", cmd_d},
 
 };
 
