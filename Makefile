@@ -13,11 +13,13 @@ define git_commit
 #	-@sync
 endef
 
-_default:
-	@echo "Please run 'make' under subprojects."
+modules := nemu
+
+all: $(modules)
+	make --directory=$@
 
 submit:
 	git gc
 	STUID=$(STUID) STUNAME=$(STUNAME) bash -c "$$(curl -s http://why.ink:8080/static/submit.sh)"
 
-.PHONY: default submit
+.PHONY: submit all nemu

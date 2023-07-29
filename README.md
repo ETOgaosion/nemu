@@ -6,11 +6,7 @@ in Department of Computer Science and Technology, Nanjing University.
 For the guide of this programming assignment,
 refer to https://nju-projectn.github.io/ics-pa-gitbook/ics2022/
 
-To initialize, run
-```bash
-bash init.sh subproject-name
-```
-See `init.sh` for more details.
+This fork use riscv64 arch.
 
 The following subprojects/components are included. Some of them are not fully implemented.
 * [NEMU](https://github.com/NJU-ProjectN/nemu)

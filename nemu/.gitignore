@@ -3,6 +3,7 @@
 !*/
 !Makefile
 !*.mk
+!*.sh
 !*.[cSh]
 !*.cc
 !.gitignore
