@@ -26,13 +26,54 @@ static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
-"  unsigned result = %s; "
-"  printf(\"%%u\", result); "
+"  int result = %s; "
+"  printf(\"%%d\", result); "
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+static inline unsigned choose(unsigned n) {
+  return rand() % n;
+}
+
+static inline void gen(char c) {
+  char add_str[] = {c, '\0'};
+  strcat(buf, add_str);
+}
+
+static inline void gen_num() {
+  char num_str[11];
+  sprintf(num_str,"%u",choose((unsigned)(100)));
+  strcat(buf, num_str);
+}
+
+static inline void gen_rand_op() {
+  char op_list[] = {'+', '-', '*','/'};
+  char add_str[] = {op_list[choose(4)], '\0'};
+  strcat(buf, add_str);
+}
+
+static inline void gen_space() {
+  for(int i = 0; i < choose(2); i++) {
+    if(choose(100) >= 50)
+    {
+      strcat(buf," ");
+    }
+  }
+}
+
+static inline void gen_rand_expr(int level) {
+  gen_space();
+  if (level > 0) {
+    switch (choose(3)) {
+      case 0: gen_num(); break;
+      case 1: gen('('); gen_rand_expr(level - 1); gen(')'); break;
+      default: gen_rand_expr(level - 1); gen_rand_op(); gen_rand_expr(level - 1); break;
+    }
+  }
+  else {
+    gen_num();
+  }
+  gen_space();
 }
 
 int main(int argc, char *argv[]) {
@@ -44,7 +85,9 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
-    gen_rand_expr();
+    memset(buf, 0, 65536);
+
+    gen_rand_expr(rand() % 10);
 
     sprintf(code_buf, code_format, buf);
 
@@ -63,7 +106,7 @@ int main(int argc, char *argv[]) {
     ret = fscanf(fp, "%d", &result);
     pclose(fp);
 
-    printf("%u %s\n", result, buf);
+    printf("%d:%s\n", result, buf);
   }
   return 0;
 }

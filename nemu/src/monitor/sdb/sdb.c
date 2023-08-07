@@ -17,12 +17,14 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "sdb.h"
+#include "monitor/expr.h"
+#include "monitor/sdb.h"
+#include "monitor/watchpoint.h"
+#include "memory/paddr.h"
 
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -49,20 +51,19 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  return -1;
+  return 0;
 }
 
 static int cmd_si(char *args) {
-  int steps = 1, retval = 1;
+  int steps = 1;
   if (args) {
     steps = atoi((const char *)args);
-    retval = steps;
     if (steps < 1) {
       steps = 1;
     }
   }
   cpu_exec(steps);
-  return retval;
+  return steps;
 }
 
 static int cmd_i(char *args) {
@@ -70,23 +71,50 @@ static int cmd_i(char *args) {
     isa_reg_display();
   }
   else if (args[0] == 'w') {
+    display_wp_pool();
   }
+  return 0;
 }
 
-static int cmd_x(char *args) {
 
+static int cmd_x(char *args) {
+  char *length_str = strtok(args, " ");
+  int length = atoi(length_str);
+  args += strlen(args) + 1;
+  bool success = false;
+  word_t val = expr(args, &success), addr_base = val;
+  for (int i = 0; i < length / 4; i++) {
+    printf("[0x%8x]: 0x%8x 0x%8x 0x%8x 0x%8x\n", addr_base, paddr_read(addr_base, 4), paddr_read(addr_base + 1, 4), paddr_read(addr_base + 2, 4), paddr_read(addr_base + 3, 4));
+    addr_base += 16;
+  }
+  if (length % 4) {
+    printf("[0x%8x]:", addr_base);
+  }
+  for (int i = 0; i < length % 4; i++) {
+    printf(" 0x%8x", paddr_read(addr_base + i, 4));
+  }
+  printf("\n");
+  return val;
 }
 
 static int cmd_p(char *args) {
-
+  bool success = false;
+  word_t val = expr(args, &success);
+  printf("0x%x\n", val);
+  return val;
 }
 
 static int cmd_w(char *args) {
-
+  int num = 0;
+  WP *watchpoint = alloc_wp(&num, args);
+  printf("add watchpoint %d", watchpoint->NO);
+  return num;
 }
 
 static int cmd_d(char *args) {
-
+  int num = atoi(args);
+  free_wp(num);
+  return num;
 }
 
 static int cmd_help(char *args);
@@ -119,12 +147,12 @@ static int cmd_help(char *args) {
 
   if (arg == NULL) {
     /* no argument given */
-    for (i = 0; i < NR_CMD; i ++) {
+    for (i = 0; i < NR_CMD; i++) {
       printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
     }
   }
   else {
-    for (i = 0; i < NR_CMD; i ++) {
+    for (i = 0; i < NR_CMD; i++) {
       if (strcmp(arg, cmd_table[i].name) == 0) {
         printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
         return 0;
@@ -140,6 +168,8 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
+  test_expr();
+
   if (is_batch_mode) {
     cmd_c(NULL);
     return;

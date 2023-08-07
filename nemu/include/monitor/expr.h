@@ -13,11 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __SDB_H__
-#define __SDB_H__
+#pragma once
 
-#include <common.h>
+#include "monitor/sdb.h"
 
 word_t expr(char *e, bool *success);
-
-#endif
+void test_expr();
