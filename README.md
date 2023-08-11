@@ -9,5 +9,5 @@ refer to https://nju-projectn.github.io/ics-pa-gitbook/ics2022/
 This repo use riscv64 arch.
 
 - [x] pa1: sdb
-- [] pa2: simple machine
+- [ ] pa2: simple machine
     - [x] pa2-1: decoder
