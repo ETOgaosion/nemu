@@ -1,0 +1,3 @@
+[submodule "am-kernels"]
+	path = am-kernels
+	url = git@github.com:ETOgaosion/am-kernels.git
