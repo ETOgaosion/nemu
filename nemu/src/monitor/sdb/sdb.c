@@ -21,8 +21,9 @@
 #include "monitor/sdb.h"
 #include "monitor/watchpoint.h"
 #include "memory/paddr.h"
+#include "utils.h"
 
-static int is_batch_mode = false;
+static int is_batch_mode = __BATCH_MODE__;
 
 void init_regex();
 
@@ -51,7 +52,8 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  return 0;
+  nemu_state.state = NEMU_END;
+  return -1;
 }
 
 static int cmd_si(char *args) {
@@ -84,14 +86,14 @@ static int cmd_x(char *args) {
   bool success = false;
   word_t val = expr(args, &success), addr_base = val;
   for (int i = 0; i < length / 4; i++) {
-    printf("[0x%8x]: 0x%8x 0x%8x 0x%8x 0x%8x\n", addr_base, paddr_read(addr_base, 4), paddr_read(addr_base + 1, 4), paddr_read(addr_base + 2, 4), paddr_read(addr_base + 3, 4));
+    printf("[0x%16lx]: 0x%16lx 0x%16lx 0x%16lx 0x%16lx\n", addr_base, paddr_read(addr_base, 4), paddr_read(addr_base + 1, 4), paddr_read(addr_base + 2, 4), paddr_read(addr_base + 3, 4));
     addr_base += 16;
   }
   if (length % 4) {
-    printf("[0x%8x]:", addr_base);
+    printf("[0x%16lx]:", addr_base);
   }
   for (int i = 0; i < length % 4; i++) {
-    printf(" 0x%8x", paddr_read(addr_base + i, 4));
+    printf(" 0x%16lx", paddr_read(addr_base + i, 4));
   }
   printf("\n");
   return val;
@@ -100,7 +102,7 @@ static int cmd_x(char *args) {
 static int cmd_p(char *args) {
   bool success = false;
   word_t val = expr(args, &success);
-  printf("0x%x\n", val);
+  printf("0x%16lx\n", val);
   return val;
 }
 
@@ -168,7 +170,7 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
-  test_expr();
+  // test_expr();
 
   if (is_batch_mode) {
     cmd_c(NULL);

@@ -35,7 +35,7 @@ void display_wp_pool() {
     if (!wp_pool[i].used) {
       continue;
     }
-    printf("Watch point [%3d]: value: 0x%8x, expr:%s\n", wp_pool[i].NO, wp_pool[i].value, wp_pool[i].expr);
+    printf("Watch point [%3d]: value: 0x%16x, expr:%s\n", wp_pool[i].NO, wp_pool[i].value, wp_pool[i].expr);
   }
 }
 
@@ -55,7 +55,7 @@ bool check_wp() {
       bool success;
       word_t new_value = expr(wp_pool[i].expr, &success);
       if (new_value != wp_pool[i].value) {
-        printf("[Watch Point %3d Hit]: old value: 0x%8x, new value: 0x%8x, expr: %s;\n", i, wp_pool[i].value, new_value, wp_pool[i].expr);
+        printf("[Watch Point %3d Hit]: old value: 0x%8x, new value: 0x%16lx, expr: %s;\n", i, wp_pool[i].value, new_value, wp_pool[i].expr);
         wp_pool[i].value = new_value;
         ret = true;
       }
