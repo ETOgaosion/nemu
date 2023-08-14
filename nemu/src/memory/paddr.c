@@ -56,15 +56,55 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
-word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  out_of_bound(addr);
-  return 0;
+word_t paddr_read(Decode *s, paddr_t addr, int len) {
+  word_t ret = 0;
+  bool read = false;
+  if (likely(in_pmem(addr))) {
+    ret = pmem_read(addr, len);
+    read = true;
+  }
+  IFDEF(CONFIG_DEVICE, ret = mmio_read(addr, len); read = true);
+  if (!read) {
+    out_of_bound(addr);
+  }
+
+  if (!s) {
+    return ret;
+  }
+
+#ifdef CONFIG_MTRACE
+  char *p = s->mtrace_logbuf;
+  int max_log_len = sizeof(s->mtrace_logbuf);
+  p += snprintf(p, max_log_len, "[decode] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->pc, s->isa.inst.val, s->isa.inst.name);
+  p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx\n", addr, len, ret);
+#endif
+  
+#ifdef CONFIG_MTRACE_COND
+  if (MTRACE_COND) { mtrace_log_write("%s\n", s->mtrace_logbuf); }
+#endif
+  return ret;
 }
 
-void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  out_of_bound(addr);
+void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
+  bool writen = false;
+  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); writen = true; }
+  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); writen = true; );
+  if (!writen) {
+    out_of_bound(addr);
+  }
+
+  if (!s) {
+    return;
+  }
+  
+#ifdef CONFIG_MTRACE
+  char *p = s->mtrace_logbuf;
+  int max_log_len = sizeof(s->mtrace_logbuf);
+  p += snprintf(p, max_log_len, "[decode] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->pc, s->isa.inst.val, s->isa.inst.name);
+  p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, data);
+#endif
+
+#ifdef CONFIG_MTRACE_COND
+  if (MTRACE_COND) { mtrace_log_write("%s\n", s->mtrace_logbuf); }
+#endif
 }

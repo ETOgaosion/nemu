@@ -21,12 +21,14 @@
 typedef struct {
   word_t gpr[32];
   vaddr_t pc;
+  vaddr_t last_pc;
 } riscv64_CPU_state;
 
 // decode
 typedef struct {
-  union {
+  struct {
     uint32_t val;
+    char name[7];
   } inst;
 } riscv64_ISADecodeInfo;
 

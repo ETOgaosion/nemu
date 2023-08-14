@@ -17,8 +17,19 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  return true;
+bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {\
+  bool ret = true;
+  for (int i = 0; i < 32; i++) {
+    if (ref_r->gpr[i] != gpr(i)) {
+      Log("[DIFFTEST ERROR]: register %s value different, dut value: 0x%lx, ref value: 0x%lx", reg_name(i), gpr(i), ref_r->gpr[i]);
+      ret = false;
+    }
+  }
+  if (pc != cpu.last_pc) {
+      Log("[DIFFTEST ERROR]: pc value different, dut value: 0x%lx, ref value: 0x%lx", cpu.last_pc, pc);
+      ret = false;
+  }
+  return ret;
 }
 
 void isa_difftest_attach() {

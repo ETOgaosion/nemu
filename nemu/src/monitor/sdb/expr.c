@@ -333,7 +333,7 @@ static word_t eval (int p, int q) {
         ret = (int)val1 != (int)val2;
         break;
       case TK_DEREF: 
-        ret = paddr_read(val2, 4);
+        ret = paddr_read(NULL, val2, 4);
         break;
       default:
         panic("[expr eval] Bad operators!");

@@ -17,13 +17,13 @@
 #include <memory/paddr.h>
 
 word_t vaddr_ifetch(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
+  return paddr_read(NULL, addr, len);
 }
 
-word_t vaddr_read(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
+word_t vaddr_read(Decode *s, vaddr_t addr, int len) {
+  return paddr_read(s, addr, len);
 }
 
-void vaddr_write(vaddr_t addr, int len, word_t data) {
-  paddr_write(addr, len, data);
+void vaddr_write(Decode *s, vaddr_t addr, int len, word_t data) {
+  paddr_write(s, addr, len, data);
 }

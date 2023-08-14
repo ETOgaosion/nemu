@@ -71,40 +71,43 @@ static uint64_t sign_extend(uint32_t input, int length) {
   return ret;
 }
 
-static void display_inst(word_t pc, int inst, const char *inst_name, int rd, int rs1, int rs2, int64_t imm, int type) {
-  printf("[decode] pc: 0x%lx, inst: 0x%x, instruction: %s, type: %d, ", pc, inst, inst_name, type);
-  printf("rs1: ");
+static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
+#ifdef CONFIG_ITRACE
+  char *p = s->itrace_logbuf;
+  int max_log_len = sizeof(s->itrace_logbuf);
+  p += snprintf(p, max_log_len, "[decode] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->pc, s->isa.inst.val, s->isa.inst.name);
+  p += snprintf(p, max_log_len, "rs1: ");
   if (rs1 >= 0 && rs1 < 32) {
-    printf("%s, rs1 value: 0x%lx, ", reg_name(rs1), R(rs1));
+    p += snprintf(p, max_log_len, "%s, rs1 value: 0x%lx\n", reg_name(rs1), R(rs1));
   }
   else {
-    printf("%d, ", rs1);
+    p += snprintf(p, max_log_len, "%d\n", rs1);
   }
-  printf("rs2: ");
+  p += snprintf(p, max_log_len, "rs2: ");
   if (rs2 >= 0 && rs2 < 32) {
-    printf("%s, rs2 value: 0x%lx, ", reg_name(rs2), R(rs2));
+    p += snprintf(p, max_log_len, "%s, rs2 value: 0x%lx\n", reg_name(rs2), R(rs2));
   }
   else {
-    printf("%d, ", rs2);
+    p += snprintf(p, max_log_len, "%d\n", rs2);
   }
-  printf("rd: ");
+  p += snprintf(p, max_log_len, "rd: ");
   if (rd >= 0 && rd < 32) {
-    printf("%s, rd value: 0x%lx, ", reg_name(rd), R(rd));
+    p += snprintf(p, max_log_len, "%s, rd value: 0x%lx\n", reg_name(rd), R(rd));
   }
   else {
-    printf("%d, ", rd);
+    p += snprintf(p, max_log_len, "%d\n", rd);
   }
-  printf("imm: ");
+  p += snprintf(p, max_log_len, "imm: ");
   if (imm < 0) {
-    printf("%ld", imm);
+    p += snprintf(p, max_log_len, "%ld\n", imm);
   }
   else {
-    printf("0x%lx", (uint64_t)imm);
+    p += snprintf(p, max_log_len, "0x%lx\n", (uint64_t)imm);
   }
-  printf("\n");
+#endif
 }
 
-static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm, int type, const char *inst_name) {
+static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm, int type) {
   uint32_t i = s->isa.inst.val;
   *rs1 = BITS(i, 19, 15);
   *rs2 = BITS(i, 24, 20);
@@ -130,9 +133,6 @@ static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm,
   default:
     break;
   }
-  if (__DEBUG__ == true) {
-    display_inst(s->pc, s->isa.inst.val, inst_name, *rd, *rs1, *rs2, *imm, type);
-  }
 }
 
 static void fence_op(int imm, bool inst) {}
@@ -143,8 +143,10 @@ static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
-#define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
-  decode_operand(s, &rd, &rs1, &rs2, &imm, concat(TYPE_, type), name); \
+#define INSTPAT_MATCH(s, inst_name, type, ... /* execute body */ ) { \
+  decode_operand(s, &rd, &rs1, &rs2, &imm, concat(TYPE_, type)); \
+  memset((void *)s->isa.inst.name, 0, sizeof(s->isa.inst.name)); \
+  memcpy((void *)s->isa.inst.name, inst_name, strlen(inst_name)); \
   __VA_ARGS__ ; \
 }
 
@@ -188,11 +190,11 @@ static int decode_exec(Decode *s) {
   // riscv32
   INSTPAT("??????? ????? ????? 000 ????? 1100111", "jalr", I, {s->dnpc = (R(rs1) + imm) & ~(uint64_t)0x1; R(rd) = s->pc + 4;});
 
-  INSTPAT("??????? ????? ????? 000 ????? 0000011", "lb", I, R(rd) = sign_extend(Mr(R(rs1) + imm, 1), 8));
-  INSTPAT("??????? ????? ????? 001 ????? 0000011", "lh", I, R(rd) = sign_extend(Mr(R(rs1) + imm, 2), 16));
-  INSTPAT("??????? ????? ????? 010 ????? 0000011", "lw", I, R(rd) = sign_extend(Mr(R(rs1) + imm, 4), 32));
-  INSTPAT("??????? ????? ????? 100 ????? 0000011", "lbu", I, R(rd) = Mr(R(rs1) + imm, 1));
-  INSTPAT("??????? ????? ????? 101 ????? 0000011", "lhu", I, R(rd) = Mr(R(rs1) + imm, 2));
+  INSTPAT("??????? ????? ????? 000 ????? 0000011", "lb", I, R(rd) = sign_extend(Mr(s, R(rs1) + imm, 1), 8));
+  INSTPAT("??????? ????? ????? 001 ????? 0000011", "lh", I, R(rd) = sign_extend(Mr(s, R(rs1) + imm, 2), 16));
+  INSTPAT("??????? ????? ????? 010 ????? 0000011", "lw", I, R(rd) = sign_extend(Mr(s, R(rs1) + imm, 4), 32));
+  INSTPAT("??????? ????? ????? 100 ????? 0000011", "lbu", I, R(rd) = Mr(s, R(rs1) + imm, 1));
+  INSTPAT("??????? ????? ????? 101 ????? 0000011", "lhu", I, R(rd) = Mr(s, R(rs1) + imm, 2));
 
   INSTPAT("??????? ????? ????? 000 ????? 0010011", "addi", I, R(rd) = R(rs1) + imm);
   INSTPAT("??????? ????? ????? 010 ????? 0010011", "slti", I, R(rd) = RS(rs1) < imm);
@@ -223,8 +225,8 @@ static int decode_exec(Decode *s) {
 
 
   // riscv64
-  INSTPAT("??????? ????? ????? 110 ????? 0000011", "lwu", I, R(rd) = Mr(R(rs1) + imm, 4));
-  INSTPAT("??????? ????? ????? 011 ????? 0000011", "ld", I, R(rd) = Mr(R(rs1) + imm, 8));
+  INSTPAT("??????? ????? ????? 110 ????? 0000011", "lwu", I, R(rd) = Mr(s, R(rs1) + imm, 4));
+  INSTPAT("??????? ????? ????? 011 ????? 0000011", "ld", I, R(rd) = Mr(s, R(rs1) + imm, 8));
   
   INSTPAT("??????? ????? ????? 000 ????? 0011011", "addiw", I, R(rd) = sign_extend(R(rs1) + imm, 32));
   INSTPAT("0000000 ????? ????? 001 ????? 0011011", "slliw", I, R(rd) = sign_extend(R(rs1) << imm, 32));
@@ -233,11 +235,11 @@ static int decode_exec(Decode *s) {
   
   // S Type
   // riscv32
-  INSTPAT("??????? ????? ????? 000 ????? 0100011", "sb", S, Mw(R(rs1) + imm, 1, R(rs2)));
-  INSTPAT("??????? ????? ????? 001 ????? 0100011", "sh", S, Mw(R(rs1) + imm, 2, R(rs2)));
-  INSTPAT("??????? ????? ????? 010 ????? 0100011", "sw", S, Mw(R(rs1) + imm, 4, R(rs2)));
+  INSTPAT("??????? ????? ????? 000 ????? 0100011", "sb", S, Mw(s, R(rs1) + imm, 1, R(rs2)));
+  INSTPAT("??????? ????? ????? 001 ????? 0100011", "sh", S, Mw(s, R(rs1) + imm, 2, R(rs2)));
+  INSTPAT("??????? ????? ????? 010 ????? 0100011", "sw", S, Mw(s, R(rs1) + imm, 4, R(rs2)));
   // riscv64
-  INSTPAT("??????? ????? ????? 011 ????? 0100011", "sd", S, Mw(R(rs1) + imm, 8, R(rs2)));
+  INSTPAT("??????? ????? ????? 011 ????? 0100011", "sd", S, Mw(s, R(rs1) + imm, 8, R(rs2)));
 
 
   // B Type
@@ -259,6 +261,8 @@ static int decode_exec(Decode *s) {
   INSTPAT_END();
 
   R(reg_zero) = 0; // reset $zero to 0
+
+  display_inst(s, rd, rs1, rs2, imm);
 
   return 0;
 }

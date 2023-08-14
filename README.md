@@ -13,3 +13,4 @@ Progress:
 - [x] pa1: sdb
 - [ ] pa2: simple machine
     - [x] pa2-1: decoder
+    - [x] pa2-2: infrastructure(2), all tests pass

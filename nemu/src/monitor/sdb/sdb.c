@@ -23,7 +23,7 @@
 #include "memory/paddr.h"
 #include "utils.h"
 
-static int is_batch_mode = __BATCH_MODE__;
+static int is_batch_mode = false;
 
 void init_regex();
 
@@ -86,14 +86,14 @@ static int cmd_x(char *args) {
   bool success = false;
   word_t val = expr(args, &success), addr_base = val;
   for (int i = 0; i < length / 4; i++) {
-    printf("[0x%16lx]: 0x%16lx 0x%16lx 0x%16lx 0x%16lx\n", addr_base, paddr_read(addr_base, 4), paddr_read(addr_base + 1, 4), paddr_read(addr_base + 2, 4), paddr_read(addr_base + 3, 4));
+    printf("[0x%16lx]: 0x%16lx 0x%16lx 0x%16lx 0x%16lx\n", addr_base, paddr_read(NULL, addr_base, 4), paddr_read(NULL, addr_base + 1, 4), paddr_read(NULL, addr_base + 2, 4), paddr_read(NULL, addr_base + 3, 4));
     addr_base += 16;
   }
   if (length % 4) {
     printf("[0x%16lx]:", addr_base);
   }
   for (int i = 0; i < length % 4; i++) {
-    printf(" 0x%16lx", paddr_read(addr_base + i, 4));
+    printf(" 0x%16lx", paddr_read(NULL, addr_base + i, 4));
   }
   printf("\n");
   return val;

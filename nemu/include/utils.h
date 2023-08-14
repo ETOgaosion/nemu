@@ -67,10 +67,61 @@ uint64_t get_time();
   } while (0) \
 )
 
+#define itrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* itrace_log_fp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(itrace_log_fp, __VA_ARGS__); \
+      fflush(itrace_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define mtrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* mtrace_log_fp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(mtrace_log_fp, __VA_ARGS__); \
+      fflush(mtrace_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define ftrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* ftrace_log_fp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(ftrace_log_fp, __VA_ARGS__); \
+      fflush(ftrace_log_fp); \
+    } \
+  } while (0) \
+)
+
 #define _Log(...) \
   do { \
     printf(__VA_ARGS__); \
     log_write(__VA_ARGS__); \
+  } while (0)
+
+#define itrace__Log(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    itrace_log_write(__VA_ARGS__); \
+  } while (0)
+
+#define mtrace__Log(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    mtrace_log_write(__VA_ARGS__); \
+  } while (0)
+
+#define ftrace__Log(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    ftrace_log_write(__VA_ARGS__); \
   } while (0)
 
 
