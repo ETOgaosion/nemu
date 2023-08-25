@@ -17,6 +17,7 @@
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
+#include "monitor/symbol.h"
 
 #define R(i) gpr(i)
 #define RS(i) (int64_t)gpr(i)
@@ -71,11 +72,17 @@ static uint64_t sign_extend(uint32_t input, int length) {
   return ret;
 }
 
+#ifdef CONFIG_FTRACE
+int function_depth = 0;
+#endif
+
 static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
+  char *p = NULL;
+  int max_log_len;
 #ifdef CONFIG_ITRACE
-  char *p = s->itrace_logbuf;
-  int max_log_len = sizeof(s->itrace_logbuf);
-  p += snprintf(p, max_log_len, "[decode] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->pc, s->isa.inst.val, s->isa.inst.name);
+  p = s->itrace_logbuf;
+  max_log_len = sizeof(s->itrace_logbuf);
+  p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
   p += snprintf(p, max_log_len, "rs1: ");
   if (rs1 >= 0 && rs1 < 32) {
     p += snprintf(p, max_log_len, "%s, rs1 value: 0x%lx\n", reg_name(rs1), R(rs1));
@@ -103,6 +110,32 @@ static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
   }
   else {
     p += snprintf(p, max_log_len, "0x%lx\n", (uint64_t)imm);
+  }
+#endif
+#ifdef CONFIG_FTRACE
+  p = s->ftrace_logbuf;
+  max_log_len = sizeof(s->ftrace_logbuf);
+  if (strcmp(s->isa.inst.name, "jalr") == 0 && rd == reg_zero && rs1 == reg_ra) {
+    // ret
+    function_depth--;
+    p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);
+    for (int i = 0; i < function_depth; i++) {
+      p += snprintf(p, max_log_len, "  ");
+    }
+    function_symbol_t *func = find_function_symbol(s->pc, true);
+    p += snprintf(p, max_log_len, "ret [%s]", func->name);
+  }
+  else {
+    // call
+    function_symbol_t *func = find_function_symbol(s->dnpc, false);
+    if (func) {
+      p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);
+      for (int i = 0; i < function_depth; i++) {
+        p += snprintf(p, max_log_len, "  ");
+      }
+      p += snprintf(p, max_log_len, "call [%s@0x%lx]", func->name, func->address);
+      function_depth++;
+    }
   }
 #endif
 }

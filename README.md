@@ -14,3 +14,10 @@ Progress:
 - [ ] pa2: simple machine
     - [x] pa2-1: decoder
     - [x] pa2-2: infrastructure(2), all tests pass
+        - [x] advanced itrace: show register value
+        - [x] mtrace
+        - [x] ftrace
+        - [x] diff test
+
+
+Documentary is in [./doc](./doc/main.md)

@@ -137,7 +137,7 @@ config TRACE_START
 config TRACE_END
   depends on TRACE
   int "When tracing is disabled (unit: number of instructions)"
-  default 10000
+  default 100000
 
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER

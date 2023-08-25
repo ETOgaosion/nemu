@@ -35,7 +35,14 @@ void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { itrace_log_write("%s\n", _this->itrace_logbuf); }
+  if (ITRACE_COND) {
+    itrace_log_write("%s\n", _this->itrace_logbuf);
+  }
+#endif
+#ifdef CONFIG_FTRACE_COND
+  if (MTRACE_COND && _this->ftrace_logbuf[0] != 0) {
+    ftrace_log_write("%s\n", _this->ftrace_logbuf);
+  }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->itrace_logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
@@ -48,6 +55,15 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
+#ifdef CONFIG_ITRACE_COND
+  memset(s->itrace_logbuf, 0, sizeof(s->itrace_logbuf));
+#endif
+#ifdef CONFIG_MTRACE_COND
+  memset(s->mtrace_logbuf, 0, sizeof(s->mtrace_logbuf));
+#endif
+#ifdef CONFIG_FTRACE_COND
+  memset(s->ftrace_logbuf, 0, sizeof(s->ftrace_logbuf));
+#endif
   isa_exec_once(s);
   cpu.last_pc = cpu.pc;
   cpu.pc = s->dnpc;
@@ -55,12 +71,14 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
 static void execute(uint64_t n) {
   Decode s;
+  s.count = 0;
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
+    s.count++;
   }
 }
 

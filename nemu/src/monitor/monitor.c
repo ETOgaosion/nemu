@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include "monitor/symbol.h"
 
 void init_rand();
 void init_log(const char *log_file, const char *itrace_log_file, const char *mtrace_log_file, const char *ftrace_log_file);
@@ -44,6 +45,7 @@ static char *itrace_log_file = NULL;
 static char *mtrace_log_file = NULL;
 static char *ftrace_log_file = NULL;
 static char *diff_so_file = NULL;
+static char *elf_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
@@ -78,12 +80,13 @@ static int parse_args(int argc, char *argv[]) {
     {"functionlog"  , required_argument, NULL, 'f'},
     {"diff"         , required_argument, NULL, 'd'},
     {"port"         , required_argument, NULL, 'p'},
+    {"elf"          , required_argument, NULL, 'e'},
+    {"source"       , required_argument, NULL, 's'},
     {"help"         , no_argument      , NULL, 'h'},
-    {"source"       , no_argument      , NULL, 's'},
     {0              , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "bhp:l:i:m:f:d:s:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "bhp:l:i:m:f:d:e:s:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
@@ -92,6 +95,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'm': mtrace_log_file = optarg; break;
       case 'f': ftrace_log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
+      case 'e': elf_file = optarg; break;
       case 's': img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -103,6 +107,7 @@ static int parse_args(int argc, char *argv[]) {
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
         printf("\t-h,--help               help\n");
+        printf("\t-e,--elf                target elf file\n");
         printf("\t-s,--source             source image\n");
         printf("\n");
         exit(0);
@@ -140,6 +145,8 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize the simple debugger. */
   init_sdb();
+
+  init_elf(elf_file);
 
 #ifndef CONFIG_ISA_loongarch32r
   IFDEF(CONFIG_ITRACE, init_disasm(

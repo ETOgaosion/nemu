@@ -19,6 +19,7 @@
 #include <isa.h>
 
 typedef struct Decode {
+  unsigned long long count;
   vaddr_t pc;
   vaddr_t snpc; // static next pc
   vaddr_t dnpc; // dynamic next pc
