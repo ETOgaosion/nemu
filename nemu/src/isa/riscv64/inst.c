@@ -125,7 +125,7 @@ static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
     function_symbol_t *func = find_function_symbol(s->pc, true);
     p += snprintf(p, max_log_len, "ret [%s]", func->name);
   }
-  else {
+  else if (strncmp(s->isa.inst.name, "jal", 3) == 0) {
     // call
     function_symbol_t *func = find_function_symbol(s->dnpc, false);
     if (func) {
