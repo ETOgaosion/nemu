@@ -29,6 +29,13 @@ AM_UP_TIME bug: in `nemu/src/device/timer.c`, only when register offset is 4, ne
 
 see [benchmarks_results](./benchmarks.md).
 
+#### FCEUX
+
+```C
+// fceux-am/src/fceu.cpp
+#define FUNC_IDX_MAX256
+```
+
 ##### WSL sound
 
 To enable WSL sound, [this](https://x410.dev/cookbook/wsl/enabling-sound-in-wsl-ubuntu-let-it-sing/) is helpful, but line 60-61 should be:

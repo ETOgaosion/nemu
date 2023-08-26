@@ -26,6 +26,7 @@ typedef struct Decode {
   ISADecodeInfo isa;
   IFDEF(CONFIG_ITRACE, char itrace_logbuf[256]);
   IFDEF(CONFIG_MTRACE, char mtrace_logbuf[256]);
+  IFDEF(CONFIG_DTRACE, char dtrace_logbuf[256]);
   IFDEF(CONFIG_FTRACE, char ftrace_logbuf[256]);
 } Decode;
 

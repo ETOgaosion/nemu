@@ -62,9 +62,22 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
   if (likely(in_pmem(addr))) {
     ret = pmem_read(addr, len);
     read = true;
+
+    if (read) {
+#ifdef CONFIG_MTRACE
+      char *p = s->mtrace_logbuf;
+      int max_log_len = sizeof(s->mtrace_logbuf) - 1;
+      p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
+      p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, ret);
+#endif
+    
+#ifdef CONFIG_MTRACE_COND
+      if (MTRACE_COND) { mtrace_log_write("%s\n\n", s->mtrace_logbuf); }
+#endif
+    }
   }
   if (!read) {
-    IFDEF(CONFIG_DEVICE, ret = mmio_read(addr, len); read = true);
+    IFDEF(CONFIG_DEVICE, ret = mmio_read(s, addr, len); read = true);
   }
   if (!read) {
     out_of_bound(addr);
@@ -73,25 +86,28 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
   if (!s) {
     return ret;
   }
-
-#ifdef CONFIG_MTRACE
-  char *p = s->mtrace_logbuf;
-  int max_log_len = sizeof(s->mtrace_logbuf);
-  p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
-  p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, ret);
-#endif
-  
-#ifdef CONFIG_MTRACE_COND
-  if (MTRACE_COND) { mtrace_log_write("%s\n\n", s->mtrace_logbuf); }
-#endif
   return ret;
 }
 
 void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
   bool writen = false;
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); writen = true; }
+  if (likely(in_pmem(addr))) {
+    pmem_write(addr, len, data); writen = true;
+    if (writen) {
+#ifdef CONFIG_MTRACE
+      char *p = s->mtrace_logbuf;
+      int max_log_len = sizeof(s->mtrace_logbuf) - 1;
+      p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
+      p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, data);
+#endif
+
+#ifdef CONFIG_MTRACE_COND
+      if (MTRACE_COND) { mtrace_log_write("%s\n\n", s->mtrace_logbuf); }
+#endif
+    }
+  }
   if (!writen) {
-    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); writen = true; );
+    IFDEF(CONFIG_DEVICE, mmio_write(s, addr, len, data); writen = true; );
   }
   if (!writen) {
     out_of_bound(addr);
@@ -101,14 +117,4 @@ void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
     return;
   }
   
-#ifdef CONFIG_MTRACE
-  char *p = s->mtrace_logbuf;
-  int max_log_len = sizeof(s->mtrace_logbuf);
-  p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
-  p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, data);
-#endif
-
-#ifdef CONFIG_MTRACE_COND
-  if (MTRACE_COND) { mtrace_log_write("%s\n\n", s->mtrace_logbuf); }
-#endif
 }

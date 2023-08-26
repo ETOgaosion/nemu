@@ -40,7 +40,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   }
 #endif
 #ifdef CONFIG_FTRACE_COND
-  if (MTRACE_COND && _this->ftrace_logbuf[0] != 0) {
+  if (FTRACE_COND && _this->ftrace_logbuf[0] != 0) {
     ftrace_log_write("%s\n", _this->ftrace_logbuf);
   }
 #endif
@@ -60,6 +60,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #endif
 #ifdef CONFIG_MTRACE_COND
   memset(s->mtrace_logbuf, 0, sizeof(s->mtrace_logbuf));
+#endif
+#ifdef CONFIG_DTRACE_COND
+  memset(s->dtrace_logbuf, 0, sizeof(s->dtrace_logbuf));
 #endif
 #ifdef CONFIG_FTRACE_COND
   memset(s->ftrace_logbuf, 0, sizeof(s->ftrace_logbuf));

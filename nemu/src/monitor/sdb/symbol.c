@@ -6,7 +6,9 @@ function_symbol_t func_symbols[MAX_FUNCTION_NUM] = {0};
 int free_symbol_ptr = 0;
 
 function_symbol_t *find_free_symbols() {
-    assert(free_symbol_ptr < MAX_FUNCTION_NUM);
+    if (free_symbol_ptr >= MAX_FUNCTION_NUM) {
+        return NULL;
+    }
     func_symbols[free_symbol_ptr].used = true;
     return &func_symbols[free_symbol_ptr++];
 }
@@ -88,9 +90,14 @@ static void read_sections(char *contents) {
         if (ELF64_ST_TYPE(symbols[i].st_info) == STT_FUNC) {
             // function symbol
             function_symbol_t *new = find_free_symbols();
-            new->address = symbols[i].st_value;
-            char *func_name = (char *)(string_table + symbols[i].st_name);
-            strncpy(new->name, (const char *)func_name, sizeof(new->name));
+            if (new) {
+                new->address = symbols[i].st_value;
+                char *func_name = (char *)(string_table + symbols[i].st_name);
+                strncpy(new->name, (const char *)func_name, sizeof(new->name));
+            }
+            else {
+                break;
+            }
         }
     }
 }

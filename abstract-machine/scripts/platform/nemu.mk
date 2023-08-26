@@ -15,6 +15,7 @@ NEMUFLAGS += -b
 NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt
 NEMUFLAGS += -i $(shell dirname $(IMAGE).elf)/nemu-itrace-log.txt
 NEMUFLAGS += -m $(shell dirname $(IMAGE).elf)/nemu-mtrace-log.txt
+NEMUFLAGS += -d $(shell dirname $(IMAGE).elf)/nemu-dtrace-log.txt
 NEMUFLAGS += -f $(shell dirname $(IMAGE).elf)/nemu-ftrace-log.txt
 NEMUFLAGS += -e $(IMAGE).elf
 

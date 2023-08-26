@@ -1,3 +1,6 @@
 [submodule "am-kernels"]
 	path = am-kernels
 	url = git@github.com:ETOgaosion/am-kernels.git
+[submodule "fceux-am"]
+	path = fceux-am
+	url = https://github.com/NJU-ProjectN/fceux-am.git
