@@ -23,8 +23,8 @@ endif
 LD := $(CXX)
 OBJDUMP := objdump
 INCLUDES = $(addprefix -I, $(INC_PATH))
-CFLAGS  := -O0 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
-LDFLAGS := -O0 $(LDFLAGS)
+CFLAGS  := -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+LDFLAGS := $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 

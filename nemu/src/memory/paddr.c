@@ -63,7 +63,9 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
     ret = pmem_read(addr, len);
     read = true;
   }
-  IFDEF(CONFIG_DEVICE, ret = mmio_read(addr, len); read = true);
+  if (!read) {
+    IFDEF(CONFIG_DEVICE, ret = mmio_read(addr, len); read = true);
+  }
   if (!read) {
     out_of_bound(addr);
   }
@@ -88,7 +90,9 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
 void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
   bool writen = false;
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); writen = true; }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); writen = true; );
+  if (!writen) {
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); writen = true; );
+  }
   if (!writen) {
     out_of_bound(addr);
   }

@@ -77,11 +77,11 @@ int function_depth = 0;
 #endif
 
 static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
+#ifdef CONFIG_ITRACE
   char *p = NULL;
   int max_log_len;
-#ifdef CONFIG_ITRACE
   p = s->itrace_logbuf;
-  max_log_len = sizeof(s->itrace_logbuf);
+  max_log_len = sizeof(s->itrace_logbuf) - 1;
   p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
   p += snprintf(p, max_log_len, "rs1: ");
   if (rs1 >= 0 && rs1 < 32) {
@@ -112,29 +112,34 @@ static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
     p += snprintf(p, max_log_len, "0x%lx\n", (uint64_t)imm);
   }
 #endif
+}
+
+static void display_ftrace(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
 #ifdef CONFIG_FTRACE
+  char *p = NULL;
+  int max_log_len;
   p = s->ftrace_logbuf;
-  max_log_len = sizeof(s->ftrace_logbuf);
-  if (strcmp(s->isa.inst.name, "jalr") == 0 && rd == reg_zero && rs1 == reg_ra) {
-    // ret
-    function_depth--;
-    p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);
-    for (int i = 0; i < function_depth; i++) {
-      p += snprintf(p, max_log_len, "  ");
-    }
-    function_symbol_t *func = find_function_symbol(s->pc, true);
-    p += snprintf(p, max_log_len, "ret [%s]", func->name);
-  }
-  else if (strncmp(s->isa.inst.name, "jal", 3) == 0) {
-    // call
+  max_log_len = sizeof(s->ftrace_logbuf) - 1;
+  if (strncmp(s->isa.inst.name, "jal", 3) == 0) {
     function_symbol_t *func = find_function_symbol(s->dnpc, false);
     if (func) {
+      // call
       p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);
-      for (int i = 0; i < function_depth; i++) {
+      for (int i = 0; i < function_depth && i < max_log_len / 4; i++) {
         p += snprintf(p, max_log_len, "  ");
       }
       p += snprintf(p, max_log_len, "call [%s@0x%lx]", func->name, func->address);
       function_depth++;
+    }
+    else if (s->isa.inst.name[3] == 'r' && rd == reg_zero) {
+      // ret
+      function_depth--;
+      p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);
+      for (int i = 0; i < function_depth && i < max_log_len / 4; i++) {
+        p += snprintf(p, max_log_len, "  ");
+      }
+      func = find_function_symbol(s->pc, true);
+      p += snprintf(p, max_log_len, "ret [%s]", func->name);
     }
   }
 #endif
@@ -202,7 +207,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 010 ????? 0110011", "mulhsu", R, R(rd) = (word_t)(((__int128_t)R(rs1) * (__uint128_t)R(rs2)) >> 64));
   INSTPAT("0000001 ????? ????? 011 ????? 0110011", "mulhu", R, R(rd) = (word_t)(((__uint128_t)R(rs1) * (__uint128_t)R(rs2)) >> 64));
   INSTPAT("0000001 ????? ????? 100 ????? 0110011", "div", R, R(rd) = RS(rs1) / RS(rs2));
-  INSTPAT("0000001 ????? ????? 101 ????? 0110011", "divu", R, R(rd) = R(rs1) * R(rs2));
+  INSTPAT("0000001 ????? ????? 101 ????? 0110011", "divu", R, R(rd) = R(rs1) / R(rs2));
   INSTPAT("0000001 ????? ????? 110 ????? 0110011", "rem", R, R(rd) = RS(rs1) % RS(rs2));
   INSTPAT("0000001 ????? ????? 111 ????? 0110011", "remu", R, R(rd) = R(rs1) % R(rs2));
 
@@ -221,7 +226,7 @@ static int decode_exec(Decode *s) {
 
   // I Type
   // riscv32
-  INSTPAT("??????? ????? ????? 000 ????? 1100111", "jalr", I, {s->dnpc = (R(rs1) + imm) & ~(uint64_t)0x1; R(rd) = s->pc + 4;});
+  INSTPAT("??????? ????? ????? 000 ????? 1100111", "jalr", I, {s->dnpc = (R(rs1) + imm) & ~(uint64_t)0x1; R(rd) = s->pc + 4; display_ftrace(s, rd, rs1, rs2, imm);});
 
   INSTPAT("??????? ????? ????? 000 ????? 0000011", "lb", I, R(rd) = sign_extend(Mr(s, R(rs1) + imm, 1), 8));
   INSTPAT("??????? ????? ????? 001 ????? 0000011", "lh", I, R(rd) = sign_extend(Mr(s, R(rs1) + imm, 2), 16));
@@ -288,7 +293,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("????? ????? ????? ????? ????? 0010111", "auipc", U, R(rd) = s->pc + imm);
 
   // J Type
-  INSTPAT("????? ????? ????? ????? ????? 1101111", "jal", J, {R(rd) = s->pc + 4; s->dnpc = s->pc + imm;});
+  INSTPAT("????? ????? ????? ????? ????? 1101111", "jal", J, {R(rd) = s->pc + 4; s->dnpc = s->pc + imm; display_ftrace(s, rd, rs1, rs2, imm);});
 
   INSTPAT("??????? ????? ????? ??? ????? ???????", "inv", N, INV(s->pc));
   INSTPAT_END();

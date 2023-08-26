@@ -23,6 +23,12 @@ ftrace is also in decode stage, we judge whether the operation is function call 
 
 #### Device
 
+AM_UP_TIME bug: in `nemu/src/device/timer.c`, only when register offset is 4, nemu would update timers, but at that time, lower bits have been read, if the time goes ahead, lower bits will not be valid. So we change the offset to 0, only first time query register will modify the timers, and we can make sure the concurrency been promised.
+
+#### Benchmarks
+
+see [benchmarks_results](./benchmarks.md).
+
 ##### WSL sound
 
 To enable WSL sound, [this](https://x410.dev/cookbook/wsl/enabling-sound-in-wsl-ubuntu-let-it-sing/) is helpful, but line 60-61 should be:
