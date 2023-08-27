@@ -15,7 +15,7 @@
 
 #include <isa.h>
 
-word_t isa_raise_intr(word_t NO, vaddr_t epc) {
+void isa_raise_intr(Decode *s, word_t NO) {
     /* TODO: Trigger an interrupt/exception with ``NO''.
      * Then return the address of the interrupt/exception vector.
      */

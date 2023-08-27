@@ -69,6 +69,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #ifdef CONFIG_FTRACE_COND
     memset(s->ftrace_logbuf, 0, sizeof(s->ftrace_logbuf));
 #endif
+#ifdef CONFIG_ETRACE_COND
+    memset(s->etrace_logbuf, 0, sizeof(s->etrace_logbuf));
+#endif
     isa_exec_once(s);
     cpu.last_pc = cpu.pc;
     cpu.pc = s->dnpc;

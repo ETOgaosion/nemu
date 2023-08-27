@@ -59,7 +59,10 @@ void init_mem() {
     Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
+uint64_t g_nr_guest_inst_m;
+
 word_t paddr_read(Decode *s, paddr_t addr, int len) {
+    g_nr_guest_inst_m++;
     word_t ret = 0;
     bool read = false;
     if (likely(in_pmem(addr))) {
@@ -95,6 +98,7 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
 }
 
 void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
+    g_nr_guest_inst_m++;
     bool writen = false;
     if (likely(in_pmem(addr))) {
         pmem_write(addr, len, data);

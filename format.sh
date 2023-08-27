@@ -1,1 +1,1 @@
-find nemu abstract-machine \( -name "*.c" -o -name "*.h" \) -not -path "nemu/tools/spike-diff/repo" -prune -exec clang-format-17 -style=file -i {} \;
+find nemu abstract-machine nanos-lite \( -name "*.c" -o -name "*.h" \) -not -path "nemu/tools/spike-diff/repo" -prune -exec clang-format-17 -style=file -i {} \;

@@ -11,20 +11,25 @@ This repo use riscv64 arch.
 Progress:
 
 - [x] pa1: sdb
-- [ ] pa2: simple machine
+- [x] pa2: simple machine
     - [x] pa2-1: decoder
-    - [x] pa2-2: infrastructure(2), all tess passpa2-3: IOE
+    - [x] pa2-2: infrastructure(2), all tess passpa
         - [x] advanced itrace: show register value
         - [x] mtrace
         - [x] ftrace
         - [x] diff test
     - [x] pa2-3: IOE
-        - [x] Serial
-        - [x] Timer
+        - [x] serial
+        - [x] timer
         - [x] dtrace
-        - [x] Keyboard
+        - [x] keyboard
         - [x] VGA
-        - [x] Audio
+        - [x] audio
+- [ ] pa3: OS
+    - [x] hardware support
+        - [x] csr registers and operations
+        - [x] trap and context switch
+        - [x] etrace
 
 
 Documentary is in [./doc](./doc/main.md)

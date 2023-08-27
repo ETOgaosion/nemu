@@ -36,6 +36,8 @@
     } })
 /* clang-format on */
 
+#ifndef panic
 #define panic(s) panic_on(1, s)
+#endif
 
 #endif

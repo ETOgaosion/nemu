@@ -82,8 +82,8 @@ uint64_t get_time();
 #define mtrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
     extern FILE* mtrace_log_fp; \
-    extern bool log_enable(); \
-    if (log_enable()) { \
+    extern bool mlog_enable(); \
+    if (mlog_enable()) { \
       fprintf(mtrace_log_fp, __VA_ARGS__); \
       fflush(mtrace_log_fp); \
     } \
@@ -93,8 +93,8 @@ uint64_t get_time();
 #define dtrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
     extern FILE* dtrace_log_fp; \
-    extern bool log_enable(); \
-    if (log_enable()) { \
+    extern bool dlog_enable(); \
+    if (dlog_enable()) { \
       fprintf(dtrace_log_fp, __VA_ARGS__); \
       fflush(dtrace_log_fp); \
     } \
@@ -104,10 +104,21 @@ uint64_t get_time();
 #define ftrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
     extern FILE* ftrace_log_fp; \
-    extern bool log_enable(); \
-    if (log_enable()) { \
+    extern bool flog_enable(); \
+    if (flog_enable()) { \
       fprintf(ftrace_log_fp, __VA_ARGS__); \
       fflush(ftrace_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define etrace_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* etrace_log_fp; \
+    extern bool elog_enable(); \
+    if (elog_enable()) { \
+      fprintf(etrace_log_fp, __VA_ARGS__); \
+      fflush(etrace_log_fp); \
     } \
   } while (0) \
 )
@@ -140,6 +151,12 @@ uint64_t get_time();
   do { \
     printf(__VA_ARGS__); \
     ftrace_log_write(__VA_ARGS__); \
+  } while (0)
+
+#define etrace__Log(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    etrace_log_write(__VA_ARGS__); \
   } while (0)
 /* clang-format off */
 

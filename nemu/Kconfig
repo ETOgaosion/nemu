@@ -179,6 +179,16 @@ config FTRACE_COND
   string "Only trace functions when the condition is true"
   default "true"
 
+config ETRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable exception tracer"
+  default y
+
+config ETRACE_COND
+  depends on ETRACE
+  string "Only trace exceptions when the condition is true"
+  default "true"
+
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
   bool "Enable differential testing"

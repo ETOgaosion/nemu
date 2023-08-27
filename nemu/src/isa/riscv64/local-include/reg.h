@@ -51,6 +51,11 @@
 #define reg_t5 30
 #define reg_t6 31
 
+#define csr_mstatus 0x300
+#define csr_mtvec 0x305
+#define csr_mepc 0x341
+#define csr_mcause 0x342
+
 static inline int check_reg_idx(int idx) {
     IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < 32));
     return idx;
@@ -62,5 +67,7 @@ static inline const char *reg_name(int idx) {
     extern const char *regs[];
     return regs[check_reg_idx(idx)];
 }
+
+word_t *csr(int num);
 
 #endif

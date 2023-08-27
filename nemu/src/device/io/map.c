@@ -52,7 +52,10 @@ void init_map() {
     p_space = io_space;
 }
 
+uint64_t g_nr_guest_inst_d;
+
 word_t map_read(Decode *s, paddr_t addr, int len, IOMap *map) {
+    g_nr_guest_inst_d++;
     assert(len >= 1 && len <= 8);
     check_bound(map, addr);
     paddr_t offset = addr - map->low;
@@ -78,6 +81,7 @@ word_t map_read(Decode *s, paddr_t addr, int len, IOMap *map) {
 }
 
 void map_write(Decode *s, paddr_t addr, int len, word_t data, IOMap *map) {
+    g_nr_guest_inst_d++;
     assert(len >= 1 && len <= 8);
     check_bound(map, addr);
     paddr_t offset = addr - map->low;

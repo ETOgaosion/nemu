@@ -28,6 +28,7 @@ typedef struct Decode {
   IFDEF(CONFIG_MTRACE, char mtrace_logbuf[256]);
   IFDEF(CONFIG_DTRACE, char dtrace_logbuf[256]);
   IFDEF(CONFIG_FTRACE, char ftrace_logbuf[256]);
+  IFDEF(CONFIG_ETRACE, char etrace_logbuf[256]);
 } Decode;
 
 // --- pattern matching mechanism ---

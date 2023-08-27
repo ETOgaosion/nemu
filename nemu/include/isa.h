@@ -53,13 +53,32 @@ enum {
     MEM_RET_FAIL,
     MEM_RET_CROSS_PAGE
 };
+enum exceptions {
+    INST_MISALIGN,
+    INST_ACCESS_FAULT,
+    INST_ILLEGAL,
+    BREAKPOINT,
+    LOAD_MISALIGN,
+    LOAD_ACCESS_FAULT,
+    STORE_MISALIGN,
+    STORE_ACCESS_FAULT,
+    ECALL_U,
+    ECALL_S,
+    ECALL_M = 11,
+    INST_PAGE_FAULT,
+    LOAD_PAGE_FAULT,
+    STORE_PAGE_FAULT = 15
+};
+
 #ifndef isa_mmu_check
 int isa_mmu_check(vaddr_t vaddr, int len, int type);
 #endif
+
 paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type);
 
 // interrupt/exception
-vaddr_t isa_raise_intr(word_t NO, vaddr_t epc);
+void isa_raise_intr(struct Decode *s, word_t NO);
+vaddr_t isa_ret_intr();
 #define INTR_EMPTY ((word_t)-1)
 word_t isa_query_intr();
 

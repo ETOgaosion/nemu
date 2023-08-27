@@ -1,9 +1,17 @@
 #include <common.h>
+#include <klib.h>
 
 static Context *do_event(Event e, Context *c) {
     switch (e.event) {
-    default:
-        panic("Unhandled event ID = %d", e.event);
+        case EVENT_YIELD:
+            printf("Yield event!\n");
+            break;
+        case EVENT_SYSCALL:
+            printf("Syscall event!\n");
+            break;
+        default:
+            panic("Unhandled event ID = %d", e.event);
+            break;
     }
 
     return c;
