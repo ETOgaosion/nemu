@@ -3,4 +3,7 @@
 	url = git@github.com:ETOgaosion/am-kernels.git
 [submodule "fceux-am"]
 	path = fceux-am
-	url = https://github.com/NJU-ProjectN/fceux-am.git
+	url = git@github.com:ETOgaosion/fceux-am.git
+[submodule "nemu/tools/spike-diff/repo"]
+	path = nemu/tools/spike-diff/repo
+	url = git@github.com:NJU-ProjectN/riscv-isa-sim
