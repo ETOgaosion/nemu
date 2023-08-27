@@ -1,7 +1,7 @@
-#include <am.h>
-#include <klib.h>
-#include <klib-macros.h>
 #include "htif.h"
+#include <am.h>
+#include <klib-macros.h>
+#include <klib.h>
 
 extern char _heap_start;
 int main(const char *args);
@@ -17,18 +17,19 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
-  htif_console_putchar(ch);
+    htif_console_putchar(ch);
 }
 
 void halt(int code) {
-  printf("Exit with code = %d\n", code);
-  htif_poweroff();
+    printf("Exit with code = %d\n", code);
+    htif_poweroff();
 
-  // should not reach here
-  while (1);
+    // should not reach here
+    while (1)
+        ;
 }
 
 void _trm_init() {
-  int ret = main(mainargs);
-  halt(ret);
+    int ret = main(mainargs);
+    halt(ret);
 }

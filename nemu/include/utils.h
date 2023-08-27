@@ -56,6 +56,7 @@ uint64_t get_time();
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
+/* clang-format on */
 #define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
     extern FILE* log_fp; \
@@ -140,6 +141,6 @@ uint64_t get_time();
     printf(__VA_ARGS__); \
     ftrace_log_write(__VA_ARGS__); \
   } while (0)
-
+/* clang-format off */
 
 #endif

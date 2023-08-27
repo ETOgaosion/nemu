@@ -4,7 +4,11 @@
 #include <common.h>
 
 #ifndef SEEK_SET
-enum {SEEK_SET, SEEK_CUR, SEEK_END};
+enum {
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END
+};
 #endif
 
 #endif

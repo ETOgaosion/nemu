@@ -1,5 +1,5 @@
-#include <klib.h>
 #include <klib-macros.h>
+#include <klib.h>
 #include <stdint.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
@@ -102,10 +102,10 @@ void *memset(void *dest, int val, size_t len) {
 }
 
 void *memmove(void *dst, const void *src, size_t n) {
-  char p_tmp[100];
-  memcpy(p_tmp, src, n);
-  memcpy(dst, p_tmp, n);
-  return dst;
+    char p_tmp[100];
+    memcpy(p_tmp, src, n);
+    memcpy(dst, p_tmp, n);
+    return dst;
 }
 
 void *memcpy(void *dest, const void *src, size_t len) {

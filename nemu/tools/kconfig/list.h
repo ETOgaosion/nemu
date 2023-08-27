@@ -16,6 +16,7 @@
  * @member:     the name of the member within the struct.
  *
  */
+/* clang-format off */
 #define container_of(ptr, type, member) ({                      \
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
 	(type *)( (char *)__mptr - offsetof(type,member) );})
@@ -63,6 +64,7 @@ struct list_head {
 		n = list_entry(pos->member.next, typeof(*pos), member);	\
 	     &pos->member != (head);					\
 	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
+/* clang-format on */
 
 /**
  * list_empty - tests whether a list is empty

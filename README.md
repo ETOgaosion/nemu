@@ -24,7 +24,7 @@ Progress:
         - [x] dtrace
         - [x] Keyboard
         - [x] VGA
-        - [ ] Sound
+        - [x] Audio
 
 
 Documentary is in [./doc](./doc/main.md)

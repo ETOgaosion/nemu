@@ -2,17 +2,17 @@
 #define ARCH_H__
 
 #ifndef __USE_GNU
-# define __USE_GNU
+#define __USE_GNU
 #endif
 
 #include <ucontext.h>
 
 struct Context {
-  uintptr_t ksp;
-  void *vm_head;
-  ucontext_t uc;
-  // skip the red zone of the stack frame, see the amd64 ABI manual for details
-  uint8_t redzone[128];
+    uintptr_t ksp;
+    void *vm_head;
+    ucontext_t uc;
+    // skip the red zone of the stack frame, see the amd64 ABI manual for details
+    uint8_t redzone[128];
 };
 
 #define GPR1 uc.uc_mcontext.gregs[REG_RDI]

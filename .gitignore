@@ -10,3 +10,5 @@
 !.gitignore
 !init.sh
 !/doc/*/fceux-am
+!.clang-format
+!format.sh

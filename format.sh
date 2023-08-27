@@ -1,0 +1,1 @@
+find nemu abstract-machine \( -name "*.c" -o -name "*.h" \) -prune -exec clang-format-17 -style=file -i {} \;

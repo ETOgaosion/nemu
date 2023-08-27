@@ -2,7 +2,7 @@
 #define ARCH_H__
 
 struct Context {
-  uintptr_t gpr[1];
+    uintptr_t gpr[1];
 };
 
 #define GPR1 gpr[0]

@@ -34,4 +34,4 @@ void gdb_send(struct gdb_conn *conn, const uint8_t *command, size_t size);
 
 uint8_t *gdb_recv(struct gdb_conn *conn, size_t *size);
 
-const char * gdb_start_noack(struct gdb_conn *conn);
+const char *gdb_start_noack(struct gdb_conn *conn);

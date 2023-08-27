@@ -1,6 +1,7 @@
 #ifndef KLIB_MACROS_H__
 #define KLIB_MACROS_H__
 
+/* clang-format off */
 #define ROUNDUP(a, sz)      ((((uintptr_t)a) + (sz) - 1) & ~((sz) - 1))
 #define ROUNDDOWN(a, sz)    ((((uintptr_t)a)) & ~((sz) - 1))
 #define LENGTH(arr)         (sizeof(arr) / sizeof((arr)[0]))
@@ -33,6 +34,7 @@
       putstr(" @ " __FILE__ ":" TOSTRING(__LINE__) "  \n"); \
       halt(1); \
     } })
+/* clang-format on */
 
 #define panic(s) panic_on(1, s)
 

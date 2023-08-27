@@ -19,6 +19,7 @@
 #include <string.h>
 
 // macro stringizing
+/* clang-format off */
 #define str_temp(x) #x
 #define str(x) str_temp(x)
 
@@ -106,5 +107,6 @@
 #define io_write(reg, ...) \
   ({ reg##_T __io_param = (reg##_T) { __VA_ARGS__ }; \
     ioe_write(reg, &__io_param); })
+/* clang-format on */
 
 #endif

@@ -1,6 +1,6 @@
+#include "monitor/symbol.h"
 #include "common.h"
 #include "monitor/elf.h"
-#include "monitor/symbol.h"
 
 function_symbol_t func_symbols[MAX_FUNCTION_NUM] = {0};
 int free_symbol_ptr = 0;
@@ -20,8 +20,7 @@ function_symbol_t *find_function_symbol(word_t address, bool isret) {
                 return &func_symbols[i];
             }
         }
-    }
-    else {
+    } else {
         int idx = 0;
         word_t addr = 0;
         for (int i = 0; i < free_symbol_ptr; i++) {
@@ -59,7 +58,7 @@ static void read_sections(char *contents) {
         if (sections[i].sh_type == SHT_SYMTAB) {
             // symbol table
             symbols = (Elf64_Sym *)(contents + sections[i].sh_offset);
-            symbol_table_size = sections[i].sh_size/sections[i].sh_entsize;
+            symbol_table_size = sections[i].sh_size / sections[i].sh_entsize;
             sym_shstr_found++;
         }
         if (sections[i].sh_type == SHT_STRTAB) {
@@ -94,8 +93,7 @@ static void read_sections(char *contents) {
                 new->address = symbols[i].st_value;
                 char *func_name = (char *)(string_table + symbols[i].st_name);
                 strncpy(new->name, (const char *)func_name, sizeof(new->name));
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -103,28 +101,28 @@ static void read_sections(char *contents) {
 }
 
 void init_elf(char *file_name) {
-  if (file_name == NULL) {
-    Log("No elf is given, skip reading elf");
-    return;
-  }
+    if (file_name == NULL) {
+        Log("No elf is given, skip reading elf");
+        return;
+    }
 
-  FILE *fp = fopen(file_name, "rb");
-  Assert(fp, "Can not open '%s'", file_name);
+    FILE *fp = fopen(file_name, "rb");
+    Assert(fp, "Can not open '%s'", file_name);
 
-  fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
 
-  Log("The elf is %s, size = %ld", file_name, size);
+    Log("The elf is %s, size = %ld", file_name, size);
 
-  fseek(fp, 0, SEEK_SET);
-  char *elf_contents = (char *)malloc(size);
-  int ret = fread(elf_contents, size, 1, fp);
-  assert(ret == 1);
+    fseek(fp, 0, SEEK_SET);
+    char *elf_contents = (char *)malloc(size);
+    int ret = fread(elf_contents, size, 1, fp);
+    assert(ret == 1);
 
-  assert(verify_contents(elf_contents) == true);
+    assert(verify_contents(elf_contents) == true);
 
-  read_sections(elf_contents);
+    read_sections(elf_contents);
 
-  free(elf_contents);
-  fclose(fp);
+    free(elf_contents);
+    fclose(fp);
 }

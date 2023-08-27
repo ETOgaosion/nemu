@@ -48,8 +48,10 @@ struct expr {
 #define EXPR_AND(dep1, dep2)	(((dep1)<(dep2))?(dep1):(dep2))
 #define EXPR_NOT(dep)		(2-(dep))
 
+/* clang-format off */
 #define expr_list_for_each_sym(l, e, s) \
 	for (e = (l); e && (s = e->right.sym); e = e->left.expr)
+/* clang-format on */
 
 struct expr_value {
 	struct expr *expr;
@@ -202,6 +204,7 @@ struct property {
 	int lineno;                /* what lineno was this property defined */
 };
 
+/* clang-format off */
 #define for_all_properties(sym, st, tok) \
 	for (st = sym->prop; st; st = st->next) \
 		if (st->type == (tok))
@@ -210,6 +213,7 @@ struct property {
 #define for_all_prompts(sym, st) \
 	for (st = sym->prop; st; st = st->next) \
 		if (st->text)
+/* clang-format on */
 
 /*
  * Represents a node in the menu tree, as seen in e.g. menuconfig (though used

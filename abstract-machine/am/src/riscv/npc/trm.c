@@ -6,7 +6,7 @@ int main(const char *args);
 
 extern char _pmem_start;
 #define PMEM_SIZE (128 * 1024 * 1024)
-#define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
+#define PMEM_END ((uintptr_t)&_pmem_start + PMEM_SIZE)
 
 Area heap = RANGE(&_heap_start, PMEM_END);
 #ifndef MAINARGS
@@ -14,14 +14,14 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 #endif
 static const char mainargs[] = MAINARGS;
 
-void putch(char ch) {
-}
+void putch(char ch) {}
 
 void halt(int code) {
-  while (1);
+    while (1)
+        ;
 }
 
 void _trm_init() {
-  int ret = main(mainargs);
-  halt(ret);
+    int ret = main(mainargs);
+    halt(ret);
 }

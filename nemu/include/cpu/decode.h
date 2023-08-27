@@ -31,6 +31,7 @@ typedef struct Decode {
 } Decode;
 
 // --- pattern matching mechanism ---
+/* clang-format off */
 __attribute__((always_inline))
 static inline void pattern_decode(const char *str, int len,
     uint64_t *key, uint64_t *mask, uint64_t *shift) {
@@ -99,6 +100,7 @@ finish:
     goto *(__instpat_end); \
   } \
 } while (0)
+/* clang-format on */
 
 #define INSTPAT_START(name) { const void ** __instpat_end = &&concat(__instpat_end_, name);
 #define INSTPAT_END(name)   concat(__instpat_end_, name): ; }

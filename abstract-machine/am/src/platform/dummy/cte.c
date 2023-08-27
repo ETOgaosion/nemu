@@ -1,19 +1,17 @@
 #include <am.h>
 
-bool cte_init(Context*(*handler)(Event, Context*)) {
-  return false;
+bool cte_init(Context *(*handler)(Event, Context *)) {
+    return false;
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+    return NULL;
 }
 
-void yield() {
-}
+void yield() {}
 
 bool ienabled() {
-  return false;
+    return false;
 }
 
-void iset(bool enable) {
-}
+void iset(bool enable) {}
