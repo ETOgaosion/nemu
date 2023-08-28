@@ -131,7 +131,7 @@ static void display_ftrace(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
       for (int i = 0; i < function_depth && i < max_log_len / 4; i++) {
         p += snprintf(p, max_log_len, "  ");
       }
-      p += snprintf(p, max_log_len, "call [%s@0x%lx]", func->name, func->address);
+      p += snprintf(p, max_log_len, "call [%s@0x%lx@%s]", func->name, func->address, func->file_name);
       function_depth++;
     }
     else if (s->isa.inst.name[3] == 'r' && rd == reg_zero) {
@@ -142,7 +142,7 @@ static void display_ftrace(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
         p += snprintf(p, max_log_len, "  ");
       }
       func = find_function_symbol(s->pc, true);
-      p += snprintf(p, max_log_len, "ret [%s]", func->name);
+      p += snprintf(p, max_log_len, "ret [%s@%s]", func->name, func->file_name);
     }
   }
 #endif

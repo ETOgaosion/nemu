@@ -128,36 +128,6 @@ uint64_t get_time();
     printf(__VA_ARGS__); \
     log_write(__VA_ARGS__); \
   } while (0)
-
-#define itrace__Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    itrace_log_write(__VA_ARGS__); \
-  } while (0)
-
-#define mtrace__Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    mtrace_log_write(__VA_ARGS__); \
-  } while (0)
-
-#define dtrace__Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    dtrace_log_write(__VA_ARGS__); \
-  } while (0)
-
-#define ftrace__Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    ftrace_log_write(__VA_ARGS__); \
-  } while (0)
-
-#define etrace__Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    etrace_log_write(__VA_ARGS__); \
-  } while (0)
 /* clang-format off */
 
 #endif

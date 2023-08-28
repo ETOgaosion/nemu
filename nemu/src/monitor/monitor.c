@@ -47,7 +47,7 @@ static char *mtrace_log_file = NULL;
 static char *ftrace_log_file = NULL;
 static char *etrace_log_file = NULL;
 static char *diff_so_file = NULL;
-static char *elf_file = NULL;
+static char *elf_files = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
@@ -108,7 +108,7 @@ static int parse_args(int argc, char *argv[]) {
             diff_so_file = optarg;
             break;
         case 'e':
-            elf_file = optarg;
+            elf_files = optarg;
             break;
         case 's':
             img_file = optarg;
@@ -164,8 +164,8 @@ void init_monitor(int argc, char *argv[]) {
     /* Initialize the simple debugger. */
     init_sdb();
 
-    #ifdef CONFIG_FTRACE
-    init_elf(elf_file);
+    #ifdef CONFIG_FTRACE_COND
+    init_elf(elf_files);
     #endif
 
 #ifndef CONFIG_ISA_loongarch32r
