@@ -43,6 +43,11 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #ifdef NDEBUG
   #define assert(ignore) ((void)0)
 #else
+#ifndef Log
+#define Log(format, ...) \
+  printf("\33[1;35m[%s,%d,%s] " format "\33[0m\n", \
+      __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+#endif
 #ifndef assert
   #define assert(cond) \
     do { \

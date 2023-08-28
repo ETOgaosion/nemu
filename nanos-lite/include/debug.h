@@ -26,6 +26,16 @@
     } \
   } while (0)
 #endif
+
+#ifndef Assert
+#define Assert(cond, format, ...) \
+  do { \
+    if (!(cond)) { \
+      Log(format, ## __VA_ARGS__); \
+      assert(cond); \
+    } \
+  } while (0)
+#endif
 /* clang-format on */
 
 #define TODO() panic("please implement me")

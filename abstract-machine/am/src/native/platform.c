@@ -1,11 +1,13 @@
 #define _GNU_SOURCE
-#include "platform.h"
+/* clang-format off */
+#include <sys/mman.h>
+#include <sys/auxv.h>
 #include <dlfcn.h>
 #include <elf.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/auxv.h>
-#include <sys/mman.h>
+#include <stdio.h>
+#include "platform.h"
+/* clang-format on */
 
 #define MAX_CPU 16
 #define TRAP_PAGE_START (void *)0x100000

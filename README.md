@@ -13,7 +13,7 @@ Progress:
 - [x] pa1: sdb
 - [x] pa2: simple machine
     - [x] pa2-1: decoder
-    - [x] pa2-2: infrastructure(2), all tess passpa
+    - [x] pa2-2: infrastructure(2), all tess pass
         - [x] advanced itrace: show register value
         - [x] mtrace
         - [x] ftrace
@@ -32,4 +32,4 @@ Progress:
         - [x] etrace
 
 
-Documentary is in [./doc](./doc/main.md)
+Documentation is in [./doc](./doc/main.md)

@@ -19,7 +19,7 @@ mtrace only gather information in pread/pwrite.
 ftrace is also in decode stage, we judge whether the operation is function call and ret. Riscv64 has some tricks, but due to our observation, they have these traits:
 
 - call: jalr or jal operation, dnpc is function address base
-- ret: jalr zero, ra, [addr], [addr] is in function address scale
+- ret: jalr rd, rs1, [addr], [addr] is in function address scale
 
 #### Device
 
@@ -53,3 +53,9 @@ In wsl, exportation would be:
 export HOST_IP=$(ip route | grep default | awk '{print $3}')
 export PULSE_SERVER=tcp:$HOST_IP
 ```
+
+### pa3
+
+#### ELF
+
+Use `riscv64-unknown-elf-readelf -h xxx.elf` can read header and find Magic is always: `Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00`

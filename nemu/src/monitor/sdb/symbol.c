@@ -44,6 +44,7 @@ static bool verify_contents(char *contents) {
 
 static void read_sections(char *contents) {
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)contents;
+    Assert(*(uint64_t *)ehdr->e_ident == 0x7f454c4602010100, "Elf Magic error");
     // sections
     Elf64_Shdr *sections = (Elf64_Shdr *)(contents + ehdr->e_shoff);
     // symbols

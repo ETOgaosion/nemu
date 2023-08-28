@@ -40,7 +40,9 @@ Context *__am_irq_handle(Context *c) {
                 else {
                     ev.event = EVENT_SYSCALL;
                 }
+                Log("expc: 0x%lx", c->mepc);
                 c->mepc += 4;
+                Log("newpc: 0x%lx", c->mepc);
                 break;
             default:
                 ev.event = EVENT_ERROR;

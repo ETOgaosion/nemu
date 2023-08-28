@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
-#include "platform.h"
+/* clang-format off */
 #include <search.h>
+#include "platform.h"
+/* clang-format on */
 
 #define USER_SPACE RANGE(0x40000000, 0xc0000000)
 
