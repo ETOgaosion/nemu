@@ -5,6 +5,8 @@
 uint32_t boot_time_hi;
 uint32_t boot_time_lo;
 
+uint64_t boot_time_epoch_sec;
+
 #define DAYS_PER_400Y (365 * 400 + 97)
 #define DAYS_PER_100Y (365 * 100 + 24)
 #define DAYS_PER_4Y (365 * 4 + 1)
@@ -85,6 +87,9 @@ int __secs_to_tm(long long t, struct tm *tm) {
 void __am_timer_init() {
     boot_time_lo = inl(RTC_ADDR);
     boot_time_hi = inl(RTC_ADDR + 4);
+    uint32_t time_lo = inl(RTC_ADDR + 8);
+    uint32_t time_hi = inl(RTC_ADDR + 12);
+    boot_time_epoch_sec = ((uint64_t)time_hi << 32) + time_lo;
 }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
@@ -95,6 +100,7 @@ void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
+    inl(RTC_ADDR);
     uint32_t time_lo = inl(RTC_ADDR + 8);
     uint32_t time_hi = inl(RTC_ADDR + 12);
     uint64_t time = ((uint64_t)time_hi << 32) + time_lo;

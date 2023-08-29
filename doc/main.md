@@ -19,7 +19,7 @@ mtrace only gather information in pread/pwrite.
 ftrace is also in decode stage, we judge whether the operation is function call and ret. Riscv64 has some tricks, but due to our observation, they have these traits:
 
 - call: jalr or jal operation, dnpc is function address base
-- ret: jalr rd, rs1, [addr], [addr] is in function address scale
+- ret: jalr rd, rs1, [addr], [addr] is in function address scale, function depth > 0
 
 #### Device
 

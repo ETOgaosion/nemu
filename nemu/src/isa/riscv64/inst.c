@@ -134,7 +134,7 @@ static void display_ftrace(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
       p += snprintf(p, max_log_len, "call [%s@0x%lx@%s]", func->name, func->address, func->file_name);
       function_depth++;
     }
-    else if (s->isa.inst.name[3] == 'r' && rd == reg_zero) {
+    else if (s->isa.inst.name[3] == 'r' && rd == reg_zero && function_depth > 0) {
       // ret
       function_depth--;
       p += snprintf(p, max_log_len, "[%lld] 0x%lx: ", s->count, s->pc);

@@ -29,8 +29,6 @@ static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
         uint64_t us = get_time();
         rtc_port_base[0] = (uint32_t)us;
         rtc_port_base[1] = us >> 32;
-    }
-    if (offset == 8) {
         time_t t = time(NULL);
         rtc_port_base[2] = (uint32_t)t;
         rtc_port_base[3] = t >> 32;

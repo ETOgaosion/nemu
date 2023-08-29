@@ -38,6 +38,8 @@ static void welcome() {
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
 
+#define MAX_ELF_FILES 10
+
 void sdb_set_batch_mode();
 
 static char *log_file = NULL;
@@ -47,7 +49,8 @@ static char *mtrace_log_file = NULL;
 static char *ftrace_log_file = NULL;
 static char *etrace_log_file = NULL;
 static char *diff_so_file = NULL;
-static char *elf_files = NULL;
+static char *elf_files[MAX_ELF_FILES] = {0};
+static int elf_file_i = 0;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
@@ -108,7 +111,9 @@ static int parse_args(int argc, char *argv[]) {
             diff_so_file = optarg;
             break;
         case 'e':
-            elf_files = optarg;
+            if (elf_file_i < MAX_ELF_FILES) {
+                elf_files[elf_file_i++] = optarg;
+            }
             break;
         case 's':
             img_file = optarg;
@@ -125,7 +130,7 @@ static int parse_args(int argc, char *argv[]) {
             printf("\t-d,--diff=REF_SO          run DiffTest with reference REF_SO\n");
             printf("\t-p,--port=PORT            run DiffTest with port PORT\n");
             printf("\t-h,--help                 help\n");
-            printf("\t-e,--elf                  target elf file\n");
+            printf("\t-e,--elf                  target elf files, allow multiple -e option\n");
             printf("\t-s,--source               source image\n");
             printf("\n");
             exit(0);
@@ -165,7 +170,9 @@ void init_monitor(int argc, char *argv[]) {
     init_sdb();
 
     #ifdef CONFIG_FTRACE_COND
-    init_elf(elf_files);
+    for (int i = 0; i < elf_file_i; i++) {
+        init_elf(elf_files[i]);
+    }
     #endif
 
 #ifndef CONFIG_ISA_loongarch32r

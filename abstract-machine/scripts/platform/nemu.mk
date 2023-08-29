@@ -18,7 +18,8 @@ NEMUFLAGS += -m $(shell dirname $(IMAGE).elf)/nemu-mtrace-log.txt
 NEMUFLAGS += -v $(shell dirname $(IMAGE).elf)/nemu-dtrace-log.txt
 NEMUFLAGS += -f $(shell dirname $(IMAGE).elf)/nemu-ftrace-log.txt
 NEMUFLAGS += -x $(shell dirname $(IMAGE).elf)/nemu-etrace-log.txt
-NEMUFLAGS += -e $(IMAGE).elf;
+# NEMUFLAGS += -e $(IMAGE).elf
+NEMUFLAGS += -e $(NAVY_HOME)/tests/event-test/build/event-test-riscv64
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/platform/nemu/include

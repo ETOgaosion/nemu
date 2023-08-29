@@ -87,6 +87,7 @@ static void read_sections(char *file_name, char *contents) {
             }
         }
     }
+    int file_name_len = strlen(file_name) < MAX_NAME_LEN - 1 ? strlen(file_name) : MAX_NAME_LEN - 1;
     for (int i = 0; i < symbol_table_size; i++) {
         if (ELF64_ST_TYPE(symbols[i].st_info) == STT_FUNC) {
             // function symbol
@@ -95,7 +96,7 @@ static void read_sections(char *file_name, char *contents) {
                 new->address = symbols[i].st_value;
                 char *func_name = (char *)(string_table + symbols[i].st_name);
                 strncpy(new->name, (const char *)func_name, sizeof(new->name));
-                strncpy(new->file_name, (const char *)file_name, sizeof(new->file_name));
+                strncpy(new->file_name, (const char *)file_name, file_name_len);
             } else {
                 break;
             }
@@ -103,39 +104,32 @@ static void read_sections(char *file_name, char *contents) {
     }
 }
 
-void init_elf(char *file_names) {
-    if (file_names == NULL) {
+void init_elf(char *file_name) {
+    if (file_name == NULL) {
         Log("No elf is given, skip reading elf");
         return;
     }
 
-    char *file_name = strtok(file_names, ";");
+    FILE *fp = fopen(file_name, "rb");
+    Assert(fp, "Can not open '%s'", file_name);
 
-    while (file_name)
-    {
-        FILE *fp = fopen(file_name, "rb");
-        Assert(fp, "Can not open '%s'", file_name);
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
 
-        fseek(fp, 0, SEEK_END);
-        long size = ftell(fp);
+    Log("The elf is %s, size = %ld", file_name, size);
 
-        Log("The elf is %s, size = %ld", file_name, size);
+    fseek(fp, 0, SEEK_SET);
+    char *elf_contents = (char *)malloc(size);
+    int ret = fread(elf_contents, size, 1, fp);
+    assert(ret == 1);
 
-        fseek(fp, 0, SEEK_SET);
-        char *elf_contents = (char *)malloc(size);
-        int ret = fread(elf_contents, size, 1, fp);
-        assert(ret == 1);
+    assert(verify_contents(elf_contents) == true);
 
-        assert(verify_contents(elf_contents) == true);
+    char *base_name = basename(file_name);
 
-        char *base_name = basename(file_name);
+    read_sections(base_name, elf_contents);
 
-        read_sections(base_name, elf_contents);
-
-        free(elf_contents);
-        fclose(fp);
-
-        file_name = strtok(NULL, ";");
-    }
+    free(elf_contents);
+    fclose(fp);
 
 }
