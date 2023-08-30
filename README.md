@@ -8,7 +8,7 @@ refer to https://nju-projectn.github.io/ics-pa-gitbook/ics2022/
 
 This repo use riscv64 arch.
 
-Progress(Year:2023):
+Progress (2023):
 
 - [x] pa1: sdb [8.7]
 - [x] pa2: simple machine [8.26]

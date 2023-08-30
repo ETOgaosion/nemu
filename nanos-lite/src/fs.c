@@ -33,6 +33,8 @@ static Finfo file_table[] __attribute__((used)) = {
     {"/dev/zero", 0, 0, 0, zero_read, zero_write},
     {"/dev/events", 0, 0, 0, events_read, 0, true},
     {"/dev/fb", 0, 0, 0, 0, fb_write},
+    {"/dev/sbctl", 0, 0, 0, sbctl_read, sbctl_write, true},
+    {"/dev/sb", 0, 0, 0, 0, sb_write, true},
     {"/proc/dispinfo", 0, 0, 0, dispinfo_read, 0, true},
 };
 

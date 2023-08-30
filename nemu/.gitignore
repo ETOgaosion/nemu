@@ -6,8 +6,10 @@
 !*.sh
 !*.[cSh]
 !*.cc
+!*.py
 !.gitignore
 !README.md
 !Kconfig
 include/config
-include/generated
+include/generated/*
+!include/generated/inst.h

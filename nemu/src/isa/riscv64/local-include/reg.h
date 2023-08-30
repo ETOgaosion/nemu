@@ -69,5 +69,6 @@ static inline const char *reg_name(int idx) {
 }
 
 word_t *csr(int num);
+const char *csr_name(int num);
 
 #endif

@@ -45,29 +45,32 @@ void do_syscall(Context *c) {
             break;
         case SYS_open:
             c->GPR2 = fs_open((const char *)a[1], a[2], a[3]);
+#ifdef STRACE
+            p += snprintf(p, STRACE_MAX_LINE, "open file name: %s, ", (const char *)a[1]);
+#endif
             break;
         case SYS_read:
             c->GPR2 = fs_read(a[1], (void *)a[2], a[3]);
 #ifdef STRACE
-            p += snprintf(p, STRACE_MAX_LINE, "file name: %s", get_file_name(a[1]));
+            p += snprintf(p, STRACE_MAX_LINE, "read file name: %s, ", get_file_name(a[1]));
 #endif
             break;
         case SYS_write:
             c->GPR2 = fs_write(a[1], (const void *)a[2], a[3]);
 #ifdef STRACE
-            p += snprintf(p, STRACE_MAX_LINE, "file name: %s", get_file_name(a[1]));
+            p += snprintf(p, STRACE_MAX_LINE, "write file name: %s, ", get_file_name(a[1]));
 #endif
             break;
         case SYS_close:
             c->GPR2 = fs_close(a[1]);
 #ifdef STRACE
-            p += snprintf(p, STRACE_MAX_LINE, "file name: %s", get_file_name(a[1]));
+            p += snprintf(p, STRACE_MAX_LINE, "close file name: %s, ", get_file_name(a[1]));
 #endif
             break;
         case SYS_lseek:
             c->GPR2 = fs_lseek(a[1], a[2], a[3]);
 #ifdef STRACE
-            p += snprintf(p, STRACE_MAX_LINE, "file name: %s", get_file_name(a[1]));
+            p += snprintf(p, STRACE_MAX_LINE, "lseek file name: %s, ", get_file_name(a[1]));
 #endif
             break;
         case SYS_brk:
@@ -88,6 +91,7 @@ void do_syscall(Context *c) {
             panic("Unhandled syscall ID = %d", a[0]);
     }
 #ifdef STRACE
+    p += snprintf(p, STRACE_MAX_LINE, "return value: %d", c->GPR2);
     printf("%s\n", strace_buf);
 #endif
 }

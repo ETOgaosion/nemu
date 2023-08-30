@@ -24,7 +24,6 @@ void isa_raise_intr(Decode *s, word_t NO) {
      */
     cpu.mcause = NO;
     cpu.mepc = s->pc;
-    cpu.mstatus = cpu.mstatus | (0x1 << 17);
     g_nr_guest_inst_e++;
 
 #ifdef CONFIG_ETRACE
@@ -44,7 +43,6 @@ void isa_raise_intr(Decode *s, word_t NO) {
 }
 
 vaddr_t isa_ret_intr() {
-    cpu.mstatus = cpu.mstatus & (~(0x1 << 17));
     return cpu.mepc;
 }
 

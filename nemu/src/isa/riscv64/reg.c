@@ -58,3 +58,24 @@ word_t *csr(int num) {
     }
     return 0;
 }
+
+const char *csr_name(int num) {
+    switch (num) {
+        case csr_mstatus:
+            return "mstatus";
+            break;
+        case csr_mtvec:
+            return "mtvec";
+            break;
+        case csr_mepc:
+            return "mepc";
+            break;
+        case csr_mcause:
+            return "mcause";
+            break;
+        default:
+            panic("Not supported csr register: %d", num);
+            break;
+    }
+    return NULL;
+}
