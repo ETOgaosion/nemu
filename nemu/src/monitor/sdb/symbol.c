@@ -131,5 +131,4 @@ void init_elf(char *file_name) {
 
     free(elf_contents);
     fclose(fp);
-
 }

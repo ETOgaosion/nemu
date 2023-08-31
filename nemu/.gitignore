@@ -12,4 +12,6 @@
 !Kconfig
 include/config
 include/generated/*
+!include/generated/inst_raw.h
 !include/generated/inst.h
+!include/generated/own_decoder.h

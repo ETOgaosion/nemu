@@ -13,8 +13,8 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include <isa.h>
 #include <cpu/decode.h>
+#include <isa.h>
 
 uint64_t g_nr_guest_inst_e;
 

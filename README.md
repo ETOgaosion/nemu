@@ -41,7 +41,9 @@ Progress (2023):
 Beyond normal contents, TODOs:
 
 - [ ] Optimization:
-    - [ ] rv64 program instruction analysis, adjust decoding order
+    - [x] rv64 program instruction analysis, adjust decoding order [+11 pts]
+    - [x] refactor decode operation like verilog code [+5 pts]
+        - [ ] still need research
     - [ ] multi-launch cpu emulation, use pthread or sth. else
     - [ ] branch prediction, use AI
 - [ ] Feature Requests:

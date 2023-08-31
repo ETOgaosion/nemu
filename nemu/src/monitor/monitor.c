@@ -151,6 +151,10 @@ void init_monitor(int argc, char *argv[]) {
     /* Open the log file. */
     init_log(log_file, itrace_log_file, dtrace_log_file, mtrace_log_file, ftrace_log_file, etrace_log_file);
 
+    if (img_file) {
+        Log("execute: %s", img_file);
+    }
+
     /* Initialize memory. */
     init_mem();
 
@@ -169,11 +173,11 @@ void init_monitor(int argc, char *argv[]) {
     /* Initialize the simple debugger. */
     init_sdb();
 
-    #ifdef CONFIG_FTRACE_COND
+#ifdef CONFIG_FTRACE_COND
     for (int i = 0; i < elf_file_i; i++) {
         init_elf(elf_files[i]);
     }
-    #endif
+#endif
 
 #ifndef CONFIG_ISA_loongarch32r
     IFDEF(CONFIG_ITRACE, init_disasm(MUXDEF(CONFIG_ISA_x86, "i686", MUXDEF(CONFIG_ISA_mips32, "mipsel", MUXDEF(CONFIG_ISA_riscv32, "riscv32", MUXDEF(CONFIG_ISA_riscv64, "riscv64", "bad")))) "-pc-linux-gnu"));

@@ -1,6 +1,6 @@
+#include "fs.h"
 #include <elf.h>
 #include <proc.h>
-#include "fs.h"
 
 #ifdef __LP64__
 #define Elf_Ehdr Elf64_Ehdr

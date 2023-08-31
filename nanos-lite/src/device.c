@@ -1,9 +1,9 @@
-#include <common.h>
 #include <am.h>
 #include <amdev.h>
+#include <common.h>
 #include <device.h>
-#include <klib.h>
 #include <klib-macros.h>
+#include <klib.h>
 
 #if defined(MULTIPROGRAM) && !defined(TIME_SHARING)
 #define MULTIPROGRAM_YIELD() yield()
@@ -38,10 +38,8 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
     return len;
 }
 
-#define NAMEINIT(key)  [ AM_KEY_##key ] = #key,
-static const char *names[] = {
-  AM_KEYS(NAMEINIT)
-};
+#define NAMEINIT(key) [AM_KEY_##key] = #key,
+static const char *names[] = {AM_KEYS(NAMEINIT)};
 
 size_t events_read(void *buf, size_t offset, size_t len) {
     AM_INPUT_KEYBRD_T ev = {0};
@@ -52,8 +50,7 @@ size_t events_read(void *buf, size_t offset, size_t len) {
     size_t ret = 0;
     if (ev.keydown) {
         ret = snprintf(buf, len, "kd %s", names[ev.keycode]);
-    }
-    else {
+    } else {
         ret = snprintf(buf, len, "ku %s", names[ev.keycode]);
     }
     return ret;

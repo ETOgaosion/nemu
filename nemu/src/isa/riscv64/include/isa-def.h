@@ -32,7 +32,6 @@ typedef struct {
 typedef struct {
     struct {
         uint32_t val;
-        char name[7];
     } inst;
 } riscv64_ISADecodeInfo;
 

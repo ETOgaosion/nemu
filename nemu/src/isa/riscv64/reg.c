@@ -40,42 +40,41 @@ word_t isa_reg_str2val(const char *s, bool *success) {
 
 word_t *csr(int num) {
     switch (num) {
-        case csr_mstatus:
-            return &cpu.mstatus;
-            break;
-        case csr_mtvec:
-            return &cpu.mtvec;
-            break;
-        case csr_mepc:
-            return &cpu.mepc;
-            break;
-        case csr_mcause:
-            return &cpu.mcause;
-            break;
-        default:
-            panic("Not supported csr register: %d", num);
-            break;
+    case csr_mstatus:
+        return &cpu.mstatus;
+        break;
+    case csr_mtvec:
+        return &cpu.mtvec;
+        break;
+    case csr_mepc:
+        return &cpu.mepc;
+        break;
+    case csr_mcause:
+        return &cpu.mcause;
+        break;
+    default:
+        break;
     }
     return 0;
 }
 
 const char *csr_name(int num) {
     switch (num) {
-        case csr_mstatus:
-            return "mstatus";
-            break;
-        case csr_mtvec:
-            return "mtvec";
-            break;
-        case csr_mepc:
-            return "mepc";
-            break;
-        case csr_mcause:
-            return "mcause";
-            break;
-        default:
-            panic("Not supported csr register: %d", num);
-            break;
+    case csr_mstatus:
+        return "mstatus";
+        break;
+    case csr_mtvec:
+        return "mtvec";
+        break;
+    case csr_mepc:
+        return "mepc";
+        break;
+    case csr_mcause:
+        return "mcause";
+        break;
+    default:
+        panic("Not supported csr register: %d", num);
+        break;
     }
     return NULL;
 }

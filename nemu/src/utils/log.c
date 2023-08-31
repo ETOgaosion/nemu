@@ -89,7 +89,3 @@ bool flog_enable() {
 bool elog_enable() {
     return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst_e >= CONFIG_TRACE_START) && (g_nr_guest_inst_e <= CONFIG_TRACE_END), false);
 }
-
-
-
-

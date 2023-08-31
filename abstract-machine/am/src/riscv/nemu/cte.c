@@ -27,23 +27,22 @@ Context *__am_irq_handle(Context *c) {
         if (c->mcause & ((uint64_t)0x1 << 63)) {
             uint64_t cause = c->mcause & ~((uint64_t)0x1 << 63);
             switch (cause) {
-                default:
-                    ev.event = EVENT_ERROR;
+            default:
+                ev.event = EVENT_ERROR;
                 break;
             }
         }
         switch (c->mcause) {
-            case ECALL_M:
-                if (c->gpr[reg_a7] == -1) {
-                    ev.event = EVENT_YIELD;
-                }
-                else {
-                    ev.event = EVENT_SYSCALL;
-                }
-                c->mepc += 4;
-                break;
-            default:
-                ev.event = EVENT_ERROR;
+        case ECALL_M:
+            if (c->gpr[reg_a7] == -1) {
+                ev.event = EVENT_YIELD;
+            } else {
+                ev.event = EVENT_SYSCALL;
+            }
+            c->mepc += 4;
+            break;
+        default:
+            ev.event = EVENT_ERROR;
             break;
         }
 

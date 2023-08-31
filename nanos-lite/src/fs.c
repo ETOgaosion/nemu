@@ -1,7 +1,7 @@
-#include <fs.h>
-#include <klib.h>
 #include <am.h>
 #include <device.h>
+#include <fs.h>
+#include <klib.h>
 
 typedef size_t (*ReadFn)(void *buf, size_t offset, size_t len);
 typedef size_t (*WriteFn)(const void *buf, size_t offset, size_t len);
@@ -38,7 +38,7 @@ static Finfo file_table[] __attribute__((used)) = {
     {"/proc/dispinfo", 0, 0, 0, dispinfo_read, 0, true},
 };
 
-static const int file_table_size = sizeof(file_table)/sizeof(Finfo);
+static const int file_table_size = sizeof(file_table) / sizeof(Finfo);
 
 void init_fs() {
     // TODO: initialize the size of /dev/fb
@@ -54,34 +54,32 @@ int fs_open(const char *pathname, int flags, int mode) {
     return -1;
 }
 
-
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t ramdisk_write(const void *buf, size_t offset, size_t len);
 
 size_t fs_read(int fd, void *buf, size_t len) {
     Assert(fd >= 0 && fd < file_table_size, "[fs read] error fd, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
     size_t ret = 0;
-    switch(fd) {
-        case FD_STDIN:
-        case FD_STDOUT:
-        case FD_STDERR:
-            panic("try read std I/O, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
-            break;
-        default:
-            if (file_table[fd].read_func) {
-                ret = file_table[fd].read_func(buf, file_table[fd].open_offset, len);
-            }
-            else {
-                if (file_table[fd].open_offset < file_table[fd].size) {
-                    if (file_table[fd].open_offset + len >= file_table[fd].size) {
-                        len = file_table[fd].size - file_table[fd].open_offset;
-                    }
-                    ramdisk_read(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
-                    file_table[fd].open_offset += len;
-                    ret = len;
+    switch (fd) {
+    case FD_STDIN:
+    case FD_STDOUT:
+    case FD_STDERR:
+        panic("try read std I/O, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
+        break;
+    default:
+        if (file_table[fd].read_func) {
+            ret = file_table[fd].read_func(buf, file_table[fd].open_offset, len);
+        } else {
+            if (file_table[fd].open_offset < file_table[fd].size) {
+                if (file_table[fd].open_offset + len >= file_table[fd].size) {
+                    len = file_table[fd].size - file_table[fd].open_offset;
                 }
+                ramdisk_read(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
+                file_table[fd].open_offset += len;
+                ret = len;
             }
-            break;
+        }
+        break;
     }
     return ret;
 }
@@ -89,34 +87,32 @@ size_t fs_read(int fd, void *buf, size_t len) {
 size_t fs_write(int fd, const void *buf, size_t len) {
     Assert(fd >= 0 && fd < file_table_size, "[fs write] error fd, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
     size_t ret = 0;
-    switch(fd) {
-        case FD_STDIN:
-            panic("try write stdin, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
-            break;
-        case FD_STDOUT:
-        case FD_STDERR:
-            if (file_table[fd].write_func) {
-                ret = file_table[fd].write_func(buf, 0, len);
-            }
-            else {
-                panic("please use write_func");
-            }
-            break;
-        default:
-            if (file_table[fd].write_func) {
-                ret = file_table[fd].write_func(buf, file_table[fd].open_offset, len);
-            }
-            else {
-                if (file_table[fd].open_offset < file_table[fd].size) {
-                    if (file_table[fd].open_offset + len >= file_table[fd].size) {
-                        len = file_table[fd].size - file_table[fd].open_offset;
-                    }
-                    ramdisk_write(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
-                    file_table[fd].open_offset += len;
-                    ret = len;
+    switch (fd) {
+    case FD_STDIN:
+        panic("try write stdin, fd: %d, buf: 0x%p, len: %ld", fd, buf, len);
+        break;
+    case FD_STDOUT:
+    case FD_STDERR:
+        if (file_table[fd].write_func) {
+            ret = file_table[fd].write_func(buf, 0, len);
+        } else {
+            panic("please use write_func");
+        }
+        break;
+    default:
+        if (file_table[fd].write_func) {
+            ret = file_table[fd].write_func(buf, file_table[fd].open_offset, len);
+        } else {
+            if (file_table[fd].open_offset < file_table[fd].size) {
+                if (file_table[fd].open_offset + len >= file_table[fd].size) {
+                    len = file_table[fd].size - file_table[fd].open_offset;
                 }
+                ramdisk_write(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
+                file_table[fd].open_offset += len;
+                ret = len;
             }
-            break;
+        }
+        break;
     }
     return ret;
 }
@@ -128,31 +124,29 @@ size_t fs_lseek(int fd, size_t offset, int whence) {
         panic("lseek not support for char device");
         return 0;
     }
-    switch(fd) {
-        case FD_STDIN:
-        case FD_STDOUT:
-        case FD_STDERR:
-            panic("try lseek std I/O, fd: %d, offset: 0x%ld, whence: %d", fd, offset, whence);
+    switch (fd) {
+    case FD_STDIN:
+    case FD_STDOUT:
+    case FD_STDERR:
+        panic("try lseek std I/O, fd: %d, offset: 0x%ld, whence: %d", fd, offset, whence);
+        break;
+    default: {
+        switch (whence) {
+        case SEEK_SET:
+            file_table[fd].open_offset = offset;
             break;
-        default: {
-            switch (whence)
-            {
-            case SEEK_SET:
-                file_table[fd].open_offset = offset;
-                break;
-            case SEEK_CUR:
-                file_table[fd].open_offset += offset;
-                break;
-            case SEEK_END:
-                file_table[fd].open_offset = file_table[fd].size;
-                break;
-            
-            default:
-                break;
-            }
-            ret = file_table[fd].open_offset;
+        case SEEK_CUR:
+            file_table[fd].open_offset += offset;
+            break;
+        case SEEK_END:
+            file_table[fd].open_offset = file_table[fd].size;
+            break;
+
+        default:
+            break;
         }
-            break;
+        ret = file_table[fd].open_offset;
+    } break;
     }
     return ret;
 }

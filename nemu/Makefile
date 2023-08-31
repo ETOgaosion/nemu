@@ -42,6 +42,7 @@ SRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
 # Extract compiler and options from menuconfig
 CC = $(call remove_quote,$(CONFIG_CC))
 DEFINES := -D__GUEST_ISA__=$(GUEST_ISA) -D__BATCH_MODE__=true
+DEFINES += -DFRAME_DECODE=true
 # ifeq ($(DEBUG), true)
 #   DEFINES += -D__DEBUG__=true
 # else
