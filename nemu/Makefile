@@ -42,7 +42,7 @@ SRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
 # Extract compiler and options from menuconfig
 CC = $(call remove_quote,$(CONFIG_CC))
 DEFINES := -D__GUEST_ISA__=$(GUEST_ISA) -D__BATCH_MODE__=true
-DEFINES += -DFRAME_DECODE=true
+DEFINES += -DOWN_DECODE=true
 # ifeq ($(DEBUG), true)
 #   DEFINES += -D__DEBUG__=true
 # else
@@ -52,6 +52,7 @@ CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
+CFLAGS_BUILD += -lpthread
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)

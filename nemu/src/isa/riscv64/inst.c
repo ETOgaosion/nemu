@@ -18,6 +18,7 @@
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/ifetch.h>
+#include <pthread.h>
 
 #define R(i) gpr(i)
 #define RS(i) (int64_t) gpr(i)
@@ -191,21 +192,25 @@ static void inline decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_
 
 static void fence_op(int imm, bool inst) {}
 
+#define OWN_DECODE
+
+#ifdef OWN_DECODE
+
 /* All riscv opcodes last 2 bytes are 11, no need to compare */
 /* clang-format off */
-#define OPCODE_R_AR    0b01100
-#define OPCODE_R_AR64  0b01110
-#define OPCODE_I_J     0b11001
 #define OPCODE_I_LD    0b00000
-#define OPCODE_I_AR    0b00100
-#define OPCODE_I_AR64  0b00110
 #define OPCODE_I_FENCE 0b00011
-#define OPCODE_I_PR    0b11100
-#define OPCODE_S       0b01000
-#define OPCODE_B       0b11000
-#define OPCODE_U_L     0b01101
+#define OPCODE_I_AR    0b00100
 #define OPCODE_U_A     0b00101
+#define OPCODE_I_AR64  0b00110
+#define OPCODE_S       0b01000
+#define OPCODE_R_AR    0b01100
+#define OPCODE_U_L     0b01101
+#define OPCODE_R_AR64  0b01110
+#define OPCODE_B       0b11000
+#define OPCODE_I_J     0b11001
 #define OPCODE_J       0b11011
+#define OPCODE_I_PR    0b11100
 
 #define MIDCODE_0 0b000
 #define MIDCODE_1 0b001
@@ -224,36 +229,118 @@ static void fence_op(int imm, bool inst) {}
 #define FRONTCODE12_9_2     0b000100000010
 #define FRONTCODE12_10_9_2  0b001100000010
 
-/*               -------|||*/
-#define ADD    0b0000000000
-#define SUB    0b0100000000
-#define MUL    0b0000001000
-#define SLL    0b0000000001
-#define MULH   0b0000001001
-#define SLT    0b0000000010
-#define MULHSU 0b0000001010
-#define SLTU   0b0000000011
-#define MULHU  0b0000001011
-#define XOR    0b0000000100
-#define DIV    0b0000001100
-#define SRL    0b0000000101
-#define SRA    0b0100000101
-#define DIVU   0b0000001101
-#define OR     0b0000000110
-#define REM    0b0000001110
-#define AND    0b0000000111
-#define REMU   0b0000001111
+/*                    ---|||||*/
+#define MID_OP_LB       0b00000000
+#define MID_OP_LH       0b00100000
+#define MID_OP_LW       0b01000000
+#define MID_OP_LD       0b01100000
+#define MID_OP_LBU      0b10000000
+#define MID_OP_LHU      0b10100000
+#define MID_OP_LWU      0b11000000
+#define MID_OP_FENCE    0b00000011
+#define MID_OP_FENCE_I  0b00100011
+#define MID_OP_ADDI     0b00000100
+#define MID_OP_SLLI     0b00100100
+#define MID_OP_SLTI     0b01000100
+#define MID_OP_SLTIU    0b01100100
+#define MID_OP_XORI     0b10000100
+#define MID_OP_SRLI     0b10100100  // SRAI
+#define MID_OP_ORI      0b11000100
+#define MID_OP_ANDI     0b11100100
+#define MID_OP_AUIPC_0  0b00000101
+#define MID_OP_AUIPC_1  0b00100101
+#define MID_OP_AUIPC_2  0b01000101
+#define MID_OP_AUIPC_3  0b01100101
+#define MID_OP_AUIPC_4  0b10000101
+#define MID_OP_AUIPC_5  0b10100101
+#define MID_OP_AUIPC_6  0b11000101
+#define MID_OP_AUIPC_7  0b11100101
+#define MID_OP_ADDIW    0b00000110
+#define MID_OP_SLLIW    0b00100110
+#define MID_OP_SRLIW    0b10100110  // SRAIW
+#define MID_OP_SB       0b00001000
+#define MID_OP_SH       0b00101000
+#define MID_OP_SW       0b01001000
+#define MID_OP_SD       0b01101000
+#define MID_OP_ADD      0b00001100  // SUB, MUL
+#define MID_OP_SLL      0b00101100  // MULH
+#define MID_OP_SLT      0b01001100  // MULHSU
+#define MID_OP_SLTU     0b01101100  // MULHU
+#define MID_OP_XOR      0b10001100  // DIV
+#define MID_OP_SRL      0b10101100  // SRA, DIVU
+#define MID_OP_OR       0b11001100  // REM
+#define MID_OP_AND      0b11101100  // REMU
+#define MID_OP_LUI_0    0b00001101
+#define MID_OP_LUI_1    0b00101101
+#define MID_OP_LUI_2    0b01001101
+#define MID_OP_LUI_3    0b01101101
+#define MID_OP_LUI_4    0b10001101
+#define MID_OP_LUI_5    0b10101101
+#define MID_OP_LUI_6    0b11001101
+#define MID_OP_LUI_7    0b11101101
+#define MID_OP_ADDW     0b00001110  // SUBW, MULW
+#define MID_OP_SLLW     0b00101110
+#define MID_OP_DIVW     0b10001110
+#define MID_OP_SRLW     0b10101110  // SRAW, DIVUW
+#define MID_OP_REMW     0b11001110
+#define MID_OP_REMUW    0b11101110
+#define MID_OP_BEQ      0b00011000
+#define MID_OP_BNE      0b00111000
+#define MID_OP_BLT      0b10011000
+#define MID_OP_BGE      0b10111000
+#define MID_OP_BLTU     0b11011000
+#define MID_OP_BGEU     0b11111000
+#define MID_OP_JARL     0b00011001
+#define MID_OP_JAL_0    0b00111011
+#define MID_OP_JAL_1    0b01011011
+#define MID_OP_JAL_2    0b01111011
+#define MID_OP_JAL_3    0b10011011
+#define MID_OP_JAL_4    0b10111011
+#define MID_OP_JAL_5    0b11011011
+#define MID_OP_JAL_6    0b11111011
+
+#define OPCODE_I_PR    0b11100
+
+/*               -------*/
+#define ADD    0b0000000
+#define SUB    0b0100000
+#define MUL    0b0000001
+#define SLL    0b0000000
+#define MULH   0b0000001
+#define SLT    0b0000000
+#define MULHSU 0b0000001
+#define SLTU   0b0000000
+#define MULHU  0b0000001
+#define XOR    0b0000000
+#define DIV    0b0000001
+#define SRL    0b0000000
+#define SRA    0b0100000
+#define DIVU   0b0000001
+#define OR     0b0000000
+#define REM    0b0000001
+#define AND    0b0000000
+#define REMU   0b0000001
 
 #define opcode_mask 0x1f
 #define midcode_mask 0x7
 /* clang-format on */
+
+typedef int (*decode_handler)(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm);
+
+#include "generated/decode_operation.h"
+
+decode_handler decode_table[0x100] = {}
+
+
+#endif
+
 
 static int decode_exec(Decode *s) {
     int rd = 0, rs1 = 0, rs2 = 0;
     int64_t imm = 0;
     s->dnpc = s->snpc;
 
-#ifdef FRAME_DECODE
+#ifndef OWN_DECODE
     /* clang-format off */
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, inst_name, type, ... /* execute body */ ) { \
@@ -270,7 +357,6 @@ static int decode_exec(Decode *s) {
 
 /* clang-format on */
 #else
-    #include "generated/own_decoder.h"
 #endif
 
     R(reg_zero) = 0; // reset $zero to 0
