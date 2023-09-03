@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include "lkc_proto.h"
+#include <stdlib.h>
 
 #define SRCTREE "srctree"
 
@@ -24,7 +25,7 @@ extern "C" {
 #define CONFIG_ "CONFIG_"
 #endif
 static inline const char *CONFIG_prefix(void) {
-    return getenv("CONFIG_") ?: CONFIG_;
+    return getenv("CONFIG_") ? NULL : CONFIG_;
 }
 #undef CONFIG_
 #define CONFIG_ CONFIG_prefix()

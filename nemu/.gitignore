@@ -16,3 +16,4 @@ include/generated/*
 !include/generated/inst.h
 !include/generated/own_decoder.h
 !include/generated/decode_operation.h
+!include/generated/handle_decode_conflicts.h

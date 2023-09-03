@@ -18,7 +18,7 @@
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/ifetch.h>
-#include <pthread.h>
+// #include <pthread.h>
 
 #define R(i) gpr(i)
 #define RS(i) (int64_t) gpr(i)
@@ -78,7 +78,7 @@ static uint64_t inline sign_extend(uint32_t input, int length) {
 }
 
 #ifdef CONFIG_ITRACE
-static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm, bool is_front) {
+static void display_inst(Decode *s, uint32_t mid_op, int rd, int rs1, int rs2, int64_t imm, bool is_front) {
     char *p = NULL;
     int max_log_len;
     p = s->itrace_logbuf;
@@ -109,6 +109,7 @@ static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm, bool 
     }
     else {
         p += strlen(p);
+        p += snprintf(p, max_log_len, "mid_op: 0x%x; ", mid_op);
         p += snprintf(p, max_log_len, "rd: ");
         if (rd >= 0 && rd < 32) {
             p += snprintf(p, max_log_len, "%s, rd value: 0x%lx; ", reg_name(rd), R(rd));
@@ -159,26 +160,25 @@ static void display_ftrace(Decode *s, int rd, int rs1, int rs2, int64_t imm) {
 #endif
 }
 
-static void inline decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm, int type) {
-    uint32_t i = s->isa.inst.val;
-    *rs1 = BITS(i, 19, 15);
-    *rs2 = BITS(i, 24, 20);
-    *rd = BITS(i, 11, 7);
+static void inline decode_operand(Decode *s, uint32_t inst, int *rd, int *rs1, int *rs2, int64_t *imm, int type) {
+    *rs1 = BITS(inst, 19, 15);
+    *rs2 = BITS(inst, 24, 20);
+    *rd = BITS(inst, 11, 7);
     switch (type) {
     case TYPE_I:
-        *imm = sign_extend(BITS(i, 31, 20), 12);
+        *imm = sign_extend(BITS(inst, 31, 20), 12);
         break;
     case TYPE_S:
-        *imm = sign_extend((BITS(i, 31, 25) << 5) | (BITS(i, 11, 7)), 12);
+        *imm = sign_extend((BITS(inst, 31, 25) << 5) | (BITS(inst, 11, 7)), 12);
         break;
     case TYPE_B:
-        *imm = sign_extend((BITS(i, 31, 31) << 12) | (BITS(i, 7, 7) << 11) | (BITS(i, 30, 25) << 5) | (BITS(i, 11, 8) << 1), 13);
+        *imm = sign_extend((BITS(inst, 31, 31) << 12) | (BITS(inst, 7, 7) << 11) | (BITS(inst, 30, 25) << 5) | (BITS(inst, 11, 8) << 1), 13);
         break;
     case TYPE_U:
-        *imm = sign_extend((BITS(i, 31, 12) << 12), 32);
+        *imm = sign_extend((BITS(inst, 31, 12) << 12), 32);
         break;
     case TYPE_J:
-        *imm = sign_extend((BITS(i, 31, 31) << 20) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 11) | (BITS(i, 30, 21) << 1), 21);
+        *imm = sign_extend((BITS(inst, 31, 31) << 20) | (BITS(inst, 19, 12) << 12) | (BITS(inst, 20, 20) << 11) | (BITS(inst, 30, 21) << 1), 21);
         break;
 
     default:
@@ -186,49 +186,17 @@ static void inline decode_operand(Decode *s, int *rd, int *rs1, int *rs2, int64_
     }
 
 #ifdef CONFIG_ITRACE
-    display_inst(s, *rd, *rs1, *rs2, *imm, true);
+    display_inst(s, 0, *rd, *rs1, *rs2, *imm, true);
 #endif
 }
 
 static void fence_op(int imm, bool inst) {}
 
-#define OWN_DECODE
 
 #ifdef OWN_DECODE
 
 /* All riscv opcodes last 2 bytes are 11, no need to compare */
 /* clang-format off */
-#define OPCODE_I_LD    0b00000
-#define OPCODE_I_FENCE 0b00011
-#define OPCODE_I_AR    0b00100
-#define OPCODE_U_A     0b00101
-#define OPCODE_I_AR64  0b00110
-#define OPCODE_S       0b01000
-#define OPCODE_R_AR    0b01100
-#define OPCODE_U_L     0b01101
-#define OPCODE_R_AR64  0b01110
-#define OPCODE_B       0b11000
-#define OPCODE_I_J     0b11001
-#define OPCODE_J       0b11011
-#define OPCODE_I_PR    0b11100
-
-#define MIDCODE_0 0b000
-#define MIDCODE_1 0b001
-#define MIDCODE_2 0b010
-#define MIDCODE_3 0b011
-#define MIDCODE_4 0b100
-#define MIDCODE_5 0b101
-#define MIDCODE_6 0b110
-#define MIDCODE_7 0b111
-
-#define FRONTCODE_0         0
-#define FRONTCODE6_5        0b010000
-#define FRONTCODE7_1        0b0000001
-#define FRONTCODE7_6        0b0100000
-#define FRONTCODE12_1       0b000000000001
-#define FRONTCODE12_9_2     0b000100000010
-#define FRONTCODE12_10_9_2  0b001100000010
-
 /*                    ---|||||*/
 #define MID_OP_LB       0b00000000
 #define MID_OP_LH       0b00100000
@@ -290,47 +258,116 @@ static void fence_op(int imm, bool inst) {}
 #define MID_OP_BGE      0b10111000
 #define MID_OP_BLTU     0b11011000
 #define MID_OP_BGEU     0b11111000
-#define MID_OP_JARL     0b00011001
-#define MID_OP_JAL_0    0b00111011
-#define MID_OP_JAL_1    0b01011011
-#define MID_OP_JAL_2    0b01111011
-#define MID_OP_JAL_3    0b10011011
-#define MID_OP_JAL_4    0b10111011
-#define MID_OP_JAL_5    0b11011011
-#define MID_OP_JAL_6    0b11111011
+#define MID_OP_JALR     0b00011001
+#define MID_OP_JAL_0    0b000011011
+#define MID_OP_JAL_1    0b00111011
+#define MID_OP_JAL_2    0b01011011
+#define MID_OP_JAL_3    0b01111011
+#define MID_OP_JAL_4    0b10011011
+#define MID_OP_JAL_5    0b10111011
+#define MID_OP_JAL_6    0b11011011
+#define MID_OP_JAL_7    0b11111011
+#define MID_OP_ECALL    0b00011100  // ebreak sret mret
+#define MID_OP_CSRRW    0b00111100
+#define MID_OP_CSRRS    0b01011100
+#define MID_OP_CSRRC    0b01111100
+#define MID_OP_CSRRWI   0b10111100
+#define MID_OP_CSRRSI   0b11011100
+#define MID_OP_CSRRCI   0b11111100
 
-#define OPCODE_I_PR    0b11100
-
-/*               -------*/
-#define ADD    0b0000000
-#define SUB    0b0100000
-#define MUL    0b0000001
-#define SLL    0b0000000
-#define MULH   0b0000001
-#define SLT    0b0000000
-#define MULHSU 0b0000001
-#define SLTU   0b0000000
-#define MULHU  0b0000001
-#define XOR    0b0000000
-#define DIV    0b0000001
-#define SRL    0b0000000
-#define SRA    0b0100000
-#define DIVU   0b0000001
-#define OR     0b0000000
-#define REM    0b0000001
-#define AND    0b0000000
-#define REMU   0b0000001
-
-#define opcode_mask 0x1f
-#define midcode_mask 0x7
+#define opcode_mask 0x7f
+#define midcode_mask 0x7000
+#define FRONTCODE7_1 0x1 << 25
+#define FRONTCODE7_6 0x1 << 30
+#define FRONTCODE12_1 0x1 << 20
+#define FRONTCODE12_2 0x1 << 21
+#define FRONTCODE12_9 0x1 << 28
+#define FRONTCODE12_10 0x1 << 29
 /* clang-format on */
 
-typedef int (*decode_handler)(Decode *s, int *rd, int *rs1, int *rs2, int64_t *imm);
+typedef void (*decode_handler)(Decode *s, uint32_t inst, int *rd, int *rs1, int *rs2, int64_t *imm);
 
 #include "generated/decode_operation.h"
+#include "generated/handle_decode_conflicts.h"
 
-decode_handler decode_table[0x100] = {}
-
+decode_handler decode_table[253] = {
+    [MID_OP_LB] = riscv64_lb,
+    [MID_OP_LH] = riscv64_lh,
+    [MID_OP_LW] = riscv64_lw,
+    [MID_OP_LD] = riscv64_ld,
+    [MID_OP_LBU] = riscv64_lbu,
+    [MID_OP_LHU] = riscv64_lhu,
+    [MID_OP_LWU] = riscv64_lwu,
+    [MID_OP_FENCE] = riscv64_fence,
+    [MID_OP_FENCE_I] = riscv64_fencei,
+    [MID_OP_ADDI] = riscv64_addi,
+    [MID_OP_SLLI] = riscv64_slli,
+    [MID_OP_SLTI] = riscv64_slti,
+    [MID_OP_SLTIU] = riscv64_sltiu,
+    [MID_OP_XORI] = riscv64_xori,
+    [MID_OP_SRLI] = handle_srli_srai,
+    [MID_OP_ORI] = riscv64_ori,
+    [MID_OP_ANDI] = riscv64_andi,
+    [MID_OP_AUIPC_0] = riscv64_auipc,
+    [MID_OP_AUIPC_1] = riscv64_auipc,
+    [MID_OP_AUIPC_2] = riscv64_auipc,
+    [MID_OP_AUIPC_3] = riscv64_auipc,
+    [MID_OP_AUIPC_4] = riscv64_auipc,
+    [MID_OP_AUIPC_5] = riscv64_auipc,
+    [MID_OP_AUIPC_6] = riscv64_auipc,
+    [MID_OP_AUIPC_7] = riscv64_auipc,
+    [MID_OP_ADDIW] = riscv64_addiw,
+    [MID_OP_SLLIW] = riscv64_slliw,
+    [MID_OP_SRLIW] = handle_srliw_sraiw,
+    [MID_OP_SB] = riscv64_sb,
+    [MID_OP_SH] = riscv64_sh,
+    [MID_OP_SW] = riscv64_sw,
+    [MID_OP_SD] = riscv64_sd,
+    [MID_OP_ADD] = handle_add_sub_mul,
+    [MID_OP_SLL] = handle_sll_mulh,
+    [MID_OP_SLT] = handle_slt_mulhsu,
+    [MID_OP_SLTU] = handle_sltu_mulhu,
+    [MID_OP_XOR] = handle_xor_div,
+    [MID_OP_SRL] = handle_srl_sra_divu,
+    [MID_OP_OR] = handle_or_rem,
+    [MID_OP_AND] = handle_and_remu,
+    [MID_OP_LUI_0] = riscv64_lui,
+    [MID_OP_LUI_1] = riscv64_lui,
+    [MID_OP_LUI_2] = riscv64_lui,
+    [MID_OP_LUI_3] = riscv64_lui,
+    [MID_OP_LUI_4] = riscv64_lui,
+    [MID_OP_LUI_5] = riscv64_lui,
+    [MID_OP_LUI_6] = riscv64_lui,
+    [MID_OP_LUI_7] = riscv64_lui,
+    [MID_OP_ADDW] = handle_addw_subw_mulw,
+    [MID_OP_SLLW] = riscv64_sllw,
+    [MID_OP_DIVW] = riscv64_divw,
+    [MID_OP_SRLW] = handle_srlw_sraw_divuw,
+    [MID_OP_REMW] = riscv64_remw,
+    [MID_OP_REMUW] = riscv64_remuw,
+    [MID_OP_BEQ] = riscv64_beq,
+    [MID_OP_BNE] = riscv64_bne,
+    [MID_OP_BLT] = riscv64_blt,
+    [MID_OP_BGE] = riscv64_bge,
+    [MID_OP_BLTU] = riscv64_bltu,
+    [MID_OP_BGEU] = riscv64_bgeu,
+    [MID_OP_JALR] = riscv64_jalr,
+    [MID_OP_JAL_0] = riscv64_jal,
+    [MID_OP_JAL_1] = riscv64_jal,
+    [MID_OP_JAL_2] = riscv64_jal,
+    [MID_OP_JAL_3] = riscv64_jal,
+    [MID_OP_JAL_4] = riscv64_jal,
+    [MID_OP_JAL_5] = riscv64_jal,
+    [MID_OP_JAL_6] = riscv64_jal,
+    [MID_OP_JAL_7] = riscv64_jal,
+    [MID_OP_ECALL] = handle_ecall_ebreak_sret_mret,
+    [MID_OP_CSRRW] = riscv64_csrrw,
+    [MID_OP_CSRRS] = riscv64_csrrs,
+    [MID_OP_CSRRC] = riscv64_csrrc,
+    [MID_OP_CSRRWI] = riscv64_csrrwi,
+    [MID_OP_CSRRSI] = riscv64_csrrsi,
+    [MID_OP_CSRRCI] = riscv64_csrrci,
+};
 
 #endif
 
@@ -344,7 +381,7 @@ static int decode_exec(Decode *s) {
     /* clang-format off */
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, inst_name, type, ... /* execute body */ ) { \
-    decode_operand(s, &rd, &rs1, &rs2, &imm, concat(TYPE_, type)); \
+    decode_operand(s, s->isa.inst.val, &rd, &rs1, &rs2, &imm, concat(TYPE_, type)); \
     __VA_ARGS__ ; \
 }
 
@@ -357,12 +394,21 @@ static int decode_exec(Decode *s) {
 
 /* clang-format on */
 #else
+    uint32_t inst = s->isa.inst.val;
+    uint32_t mid_op = ((inst & midcode_mask) >> 7) | ((inst & opcode_mask) >> 2);
+    if (decode_table[mid_op]) {
+        decode_table[mid_op](s, inst, &rd, &rs1, &rs2, &imm);
+    }
+    else {
+        Log("mid_op: 0x%x", mid_op);
+        INV(s->pc);
+    }
 #endif
 
     R(reg_zero) = 0; // reset $zero to 0
 
 #ifdef CONFIG_ITRACE
-    display_inst(s, rd, rs1, rs2, imm, false);
+    display_inst(s, mid_op, rd, rs1, rs2, imm, false);
 #endif
 
     return 0;
