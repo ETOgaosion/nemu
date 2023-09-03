@@ -396,13 +396,7 @@ static int decode_exec(Decode *s) {
 #else
     uint32_t inst = s->isa.inst.val;
     uint32_t mid_op = ((inst & midcode_mask) >> 7) | ((inst & opcode_mask) >> 2);
-    if (decode_table[mid_op]) {
-        decode_table[mid_op](s, inst, &rd, &rs1, &rs2, &imm);
-    }
-    else {
-        Log("mid_op: 0x%x", mid_op);
-        INV(s->pc);
-    }
+    decode_table[mid_op](s, inst, &rd, &rs1, &rs2, &imm);
 #endif
 
     R(reg_zero) = 0; // reset $zero to 0

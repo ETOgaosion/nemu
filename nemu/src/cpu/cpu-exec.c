@@ -27,7 +27,9 @@
 #define MAX_INST_TO_PRINT 10
 
 CPU_state cpu = {};
+#ifdef CONFIG_ITRACE
 uint64_t g_nr_guest_inst = 0;
+#endif
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
@@ -82,7 +84,9 @@ static void execute(uint64_t n) {
     s.count = 0;
     for (; n > 0; n--) {
         exec_once(&s, cpu.pc);
+#ifdef CONFIG_ITRACE
         g_nr_guest_inst++;
+#endif
         trace_and_difftest(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) {
             break;
@@ -96,12 +100,14 @@ static void statistic() {
     IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
     Log("host time spent = " NUMBERIC_FMT " us", g_timer);
+#ifdef CONFIG_ITRACE
     Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
     if (g_timer > 0) {
         Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
     } else {
         Log("Finish running in less than 1 us and can not calculate the simulation frequency");
     }
+#endif
 }
 
 void assert_fail_msg() {

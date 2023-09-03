@@ -42,7 +42,8 @@ Beyond normal contents, TODOs:
 
 - [ ] Optimization:
     - [x] rv64 program instruction analysis, adjust decoding order [+11 pts]
-    - [x] refactor decode operation with hash decoder and force jump table [+5 pts]
+    - [x] refactor decode operation with hash decoder and force jump table [+10 pts]
+        - this is as far as we can do, cannot be equal to 1
     - [ ] multi-launch cpu emulation, use pthread or sth. else
     - [ ] branch prediction, use AI
 - [ ] Feature Requests:

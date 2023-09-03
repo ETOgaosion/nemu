@@ -88,10 +88,10 @@ size_t sbctl_read(void *buf, size_t offset, size_t len) {
 }
 
 size_t sbctl_write(const void *buf, size_t offset, size_t len) {
-    assert(len == 3);
+    assert(len == 4);
     int *sbctl_args = (int *)buf;
-    int freq = sbctl_args[0], channels = sbctl_args[1], samples = sbctl_args[2];
-    io_write(AM_AUDIO_CTRL, freq, channels, samples);
+    int pause = sbctl_args[0], freq = sbctl_args[1], channels = sbctl_args[2], samples = sbctl_args[3];
+    io_write(AM_AUDIO_CTRL, pause, freq, channels, samples);
     return 3;
 }
 

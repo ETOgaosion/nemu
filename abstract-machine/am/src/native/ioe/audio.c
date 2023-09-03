@@ -49,19 +49,24 @@ static void audio_write(uint8_t *buf, int len) {
 }
 
 void __am_audio_ctrl(AM_AUDIO_CTRL_T *ctrl) {
-    SDL_AudioSpec s = {};
-    s.freq = ctrl->freq;
-    s.format = AUDIO_S16SYS;
-    s.channels = ctrl->channels;
-    s.samples = ctrl->samples;
-    s.callback = audio_play;
-    s.userdata = NULL;
+    if (!ctrl->freq || !ctrl->channels || !ctrl->samples) {
+        SDL_PauseAudio(ctrl->pause_on);
+    }
+    else {
+        SDL_AudioSpec s = {};
+        s.freq = ctrl->freq;
+        s.format = AUDIO_S16SYS;
+        s.channels = ctrl->channels;
+        s.samples = ctrl->samples;
+        s.callback = audio_play;
+        s.userdata = NULL;
 
-    count = 0;
-    int ret = SDL_InitSubSystem(SDL_INIT_AUDIO);
-    if (ret == 0) {
-        SDL_OpenAudio(&s, NULL);
-        SDL_PauseAudio(0);
+        count = 0;
+        int ret = SDL_InitSubSystem(SDL_INIT_AUDIO);
+        if (ret == 0) {
+            SDL_OpenAudio(&s, NULL);
+            SDL_PauseAudio(0);
+        }
     }
 }
 
