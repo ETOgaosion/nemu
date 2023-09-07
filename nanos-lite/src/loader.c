@@ -1,6 +1,7 @@
 #include "fs.h"
 #include <elf.h>
-#include <proc.h>
+#include "proc.h"
+#include "memory.h"
 
 #ifdef __LP64__
 #define Elf_Ehdr Elf64_Ehdr
@@ -47,4 +48,56 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 void naive_uload(PCB *pcb, const char *filename) {
     uintptr_t entry = loader(pcb, filename);
     ((void (*)())entry)();
+}
+
+void context_kload(PCB *pcb, void *entry, void *arg) {
+  Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+  pcb->cp = kcontext(kstack, entry, arg);
+}
+
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
+  uintptr_t ustack = (uintptr_t)(new_page(8) + 8 * PGSIZE);
+  uintptr_t num_argv = 0;
+  uintptr_t num_envp = 0;
+  if (argv == NULL)
+    num_argv = 0;
+  else
+  {
+    while (argv[num_argv] != NULL)
+      num_argv++;
+  }
+  if (envp == NULL)
+    num_envp = 0;
+  else
+  {
+    while (envp[num_envp] != NULL)
+      num_envp++;
+  }
+  uintptr_t *map_argv = new_page(((num_argv + 1) * sizeof(uintptr_t) + PGSIZE - 1) / PGSIZE);
+  uintptr_t *map_envp = new_page(((num_envp + 1) * sizeof(uintptr_t) + PGSIZE - 1) / PGSIZE);
+  for (int i = 0; i < num_argv; i++)
+  {
+    ustack -= strlen(argv[i]) + 1;
+    strcpy((char *)(ustack), argv[i]);
+    map_argv[i] = ustack;
+  }
+  for (int i = 0; i < num_envp; i++)
+  {
+    ustack -= strlen(envp[i]) + 1;
+    strcpy((char *)(ustack), envp[i]);
+    map_envp[i] = ustack;
+  }
+  map_argv[num_argv] = (uintptr_t)NULL;
+  map_envp[num_envp] = (uintptr_t)NULL;
+  ustack -= (num_envp + 1) * sizeof(uintptr_t);
+  memcpy((void *)(ustack), (void *)map_envp, (num_envp + 1) * sizeof(uintptr_t));
+  ustack -= (num_argv + 1) * sizeof(uintptr_t);
+  memcpy((void *)(ustack), (void *)map_argv, (num_argv + 1) * sizeof(uintptr_t));
+  ustack -= sizeof(uintptr_t);
+  memcpy((void *)(ustack), (void *)&num_argv, sizeof(uintptr_t));
+
+  uintptr_t entry = loader(pcb, filename);
+  Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+  pcb->cp = ucontext(&pcb->as, kstack, (void *)entry);
+  pcb->cp->GPRx = ustack;
 }

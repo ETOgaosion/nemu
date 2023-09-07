@@ -45,5 +45,5 @@ struct Context {
 #define GPR2 gpr[reg_a0]
 #define GPR3 gpr[reg_a1]
 #define GPR4 gpr[reg_a2]
-#define GPRx gpr[reg_a3]
+#define GPRx gpr[reg_a0]
 #endif

@@ -67,5 +67,10 @@ void __am_switch(Context *c) {
 void map(AddrSpace *as, void *va, void *pa, int prot) {}
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
-    return NULL;
+    Context *ctx = kstack.end - sizeof(Context);
+    memset((void *)ctx, 0, sizeof(Context));
+    ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->mepc = (uintptr_t)entry;
+    ctx->mstatus = 0xa00001800;
+    return ctx;
 }

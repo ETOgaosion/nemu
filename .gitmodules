@@ -7,6 +7,3 @@
 [submodule "nemu/tools/spike-diff/repo"]
 	path = nemu/tools/spike-diff/repo
 	url = git@github.com:NJU-ProjectN/riscv-isa-sim
-[submodule "navy-apps"]
-	path = navy-apps
-	url = git@github.com:ETOgaosion/navy-apps.git

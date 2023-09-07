@@ -4,6 +4,18 @@
 
 static Context *(*user_handler)(Event, Context *) = NULL;
 
+enum interrupts {
+    USI,
+    SSI,
+    MSI = 3,
+    UTI,
+    STI,
+    MTI = 7,
+    UEI,
+    SEI,
+    MEI = 11
+};
+
 enum exceptions {
     INST_MISALIGN,
     INST_ACCESS_FAULT,
@@ -27,23 +39,29 @@ Context *__am_irq_handle(Context *c) {
         if (c->mcause & ((uint64_t)0x1 << 63)) {
             uint64_t cause = c->mcause & ~((uint64_t)0x1 << 63);
             switch (cause) {
+            case MTI:
+            case STI:
+                Log("Timer Interrupt");
+                break;
             default:
                 ev.event = EVENT_ERROR;
                 break;
             }
         }
-        switch (c->mcause) {
-        case ECALL_M:
-            if (c->gpr[reg_a7] == -1) {
-                ev.event = EVENT_YIELD;
-            } else {
-                ev.event = EVENT_SYSCALL;
+        else {
+            switch (c->mcause) {
+            case ECALL_M:
+                if (c->gpr[reg_a7] == -1) {
+                    ev.event = EVENT_YIELD;
+                } else {
+                    ev.event = EVENT_SYSCALL;
+                }
+                c->mepc += 4;
+                break;
+            default:
+                ev.event = EVENT_ERROR;
+                break;
             }
-            c->mepc += 4;
-            break;
-        default:
-            ev.event = EVENT_ERROR;
-            break;
         }
 
         c = user_handler(ev, c);
@@ -66,7 +84,13 @@ bool cte_init(Context *(*handler)(Event, Context *)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-    return NULL;
+    Context *ctx = kstack.end - sizeof(Context);
+    memset((void *)ctx, 0, sizeof(Context));
+    ctx->gpr[reg_a0] = (uintptr_t)arg;
+    ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->mepc = (uintptr_t)entry;
+    ctx->mstatus = 0xa00001800;
+    return ctx;
 }
 
 void yield() {
