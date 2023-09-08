@@ -47,8 +47,7 @@ Context *__am_irq_handle(Context *c) {
                 ev.event = EVENT_ERROR;
                 break;
             }
-        }
-        else {
+        } else {
             switch (c->mcause) {
             case ECALL_M:
                 if (c->gpr[reg_a7] == -1) {
@@ -63,7 +62,6 @@ Context *__am_irq_handle(Context *c) {
                 break;
             }
         }
-
         c = user_handler(ev, c);
         assert(c != NULL);
     }

@@ -1,9 +1,13 @@
 #include <memory.h>
+#include <am.h>
 
 static void *pf = NULL;
 
 void *new_page(size_t nr_page) {
-    return NULL;
+  void *old = pf;
+  memset(pf, 0, nr_page * PGSIZE);
+  pf += nr_page * PGSIZE;
+  return old;
 }
 
 #ifdef HAS_VME

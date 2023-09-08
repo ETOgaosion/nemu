@@ -25,7 +25,7 @@ Progress (2023):
         - [x] keyboard
         - [x] VGA
         - [x] audio
-- [ ] pa3: OS
+- [ ] pa3: Batch OS
     - [x] pa3-1: hardware support [8.27]
         - [x] csr registers and operations
         - [x] trap and context switch
@@ -37,6 +37,11 @@ Progress (2023):
         - [x] FS operations
         - [x] IOE: serial, timer, keyboard, vedio
         - [ ] TODO: other VFS directories
+- [ ] pa4: TDM OS (Time-Division Multiplexing)
+    - [x] pa4-1: Multiplexing
+        - [x] context switch
+        - [x] kernel threads and user processes
+        - [x] all tests pass
 
 Beyond normal contents, TODOs:
 

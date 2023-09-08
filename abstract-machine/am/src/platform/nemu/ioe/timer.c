@@ -104,7 +104,7 @@ void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
     uint32_t time_lo = inl(RTC_ADDR + 8);
     uint32_t time_hi = inl(RTC_ADDR + 12);
     uint64_t time = ((uint64_t)time_hi << 32) + time_lo;
-    struct tm tm_time;
+    struct tm tm_time = {0};
     __secs_to_tm(time, &tm_time);
     rtc->second = tm_time.tm_sec;
     rtc->minute = tm_time.tm_min;

@@ -2,7 +2,7 @@ REPO_PATH = repo
 CONFIG_FILE = config/nanos-lite.config
 PATCH_FILE = $(abspath patch/diff.patch)
 ifeq ($(wildcard repo/include/busybox.h),)
-  $(shell git clone --depth=1 -b 1_32_stable git://git.busybox.net/busybox $(REPO_PATH))
+  $(shell git clone --depth=1 -b 1_32_stable https://github.com/mirror/busybox.git $(REPO_PATH))
   $(shell cd $(REPO_PATH) && git apply $(PATCH_FILE))
   $(shell cp $(CONFIG_FILE) $(REPO_PATH)/.config)
 endif

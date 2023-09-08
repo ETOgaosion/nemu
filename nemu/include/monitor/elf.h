@@ -67,7 +67,7 @@
 #define STT_TLS 6
 
 #define ELF_ST_BIND(x) ((x) >> 4)
-#define ELF_ST_TYPE(x) ((x)&0xf)
+#define ELF_ST_TYPE(x) ((x) & 0xf)
 #define ELF64_ST_BIND(x) ELF_ST_BIND(x)
 #define ELF64_ST_TYPE(x) ELF_ST_TYPE(x)
 

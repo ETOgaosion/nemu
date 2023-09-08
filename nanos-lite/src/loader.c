@@ -1,7 +1,7 @@
 #include "fs.h"
-#include <elf.h>
-#include "proc.h"
 #include "memory.h"
+#include "proc.h"
+#include <elf.h>
 
 #ifdef __LP64__
 #define Elf_Ehdr Elf64_Ehdr
@@ -40,6 +40,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
             memset(bin + phdr->p_filesz, 0, phdr->p_memsz - phdr->p_filesz);
         }
     }
+    fs_close(fd);
     free(ehdr);
     free(phdr);
     return ehdr->e_entry;
@@ -51,53 +52,72 @@ void naive_uload(PCB *pcb, const char *filename) {
 }
 
 void context_kload(PCB *pcb, void *entry, void *arg) {
-  Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
-  pcb->cp = kcontext(kstack, entry, arg);
+    Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+    pcb->cp = kcontext(kstack, entry, arg);
 }
 
-void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
-  uintptr_t ustack = (uintptr_t)(new_page(8) + 8 * PGSIZE);
-  uintptr_t num_argv = 0;
-  uintptr_t num_envp = 0;
-  if (argv == NULL)
-    num_argv = 0;
-  else
-  {
-    while (argv[num_argv] != NULL)
-      num_argv++;
-  }
-  if (envp == NULL)
-    num_envp = 0;
-  else
-  {
-    while (envp[num_envp] != NULL)
-      num_envp++;
-  }
-  uintptr_t *map_argv = new_page(((num_argv + 1) * sizeof(uintptr_t) + PGSIZE - 1) / PGSIZE);
-  uintptr_t *map_envp = new_page(((num_envp + 1) * sizeof(uintptr_t) + PGSIZE - 1) / PGSIZE);
-  for (int i = 0; i < num_argv; i++)
-  {
-    ustack -= strlen(argv[i]) + 1;
-    strcpy((char *)(ustack), argv[i]);
-    map_argv[i] = ustack;
-  }
-  for (int i = 0; i < num_envp; i++)
-  {
-    ustack -= strlen(envp[i]) + 1;
-    strcpy((char *)(ustack), envp[i]);
-    map_envp[i] = ustack;
-  }
-  map_argv[num_argv] = (uintptr_t)NULL;
-  map_envp[num_envp] = (uintptr_t)NULL;
-  ustack -= (num_envp + 1) * sizeof(uintptr_t);
-  memcpy((void *)(ustack), (void *)map_envp, (num_envp + 1) * sizeof(uintptr_t));
-  ustack -= (num_argv + 1) * sizeof(uintptr_t);
-  memcpy((void *)(ustack), (void *)map_argv, (num_argv + 1) * sizeof(uintptr_t));
-  ustack -= sizeof(uintptr_t);
-  memcpy((void *)(ustack), (void *)&num_argv, sizeof(uintptr_t));
+int strlistlen(char *src[]) {
+    int num = 0;
+    if (src) {
+        while (src[num]) {
+            num++;
+        }
+    }
+    return num;
+}
 
-  uintptr_t entry = loader(pcb, filename);
-  Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
-  pcb->cp = ucontext(&pcb->as, kstack, (void *)entry);
-  pcb->cp->GPRx = ustack;
+#define SIZE_RESTORE 8
+
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
+    Log("load file: %s", filename);
+    uintptr_t ustack = (uintptr_t)(new_page(8) + 8 * PGSIZE);
+    int argc = strlistlen((char **)argv);
+    int envpc = strlistlen((char **)envp);
+    int total_length = (argc + envpc + 3) * sizeof(uintptr_t *) + SIZE_RESTORE;
+    int pointers_length = total_length;
+    for (int i = 0; i < argc; i++) {
+        total_length += (strlen(argv[i]) + 1);
+    }
+    for (int i = 0; i < envpc; i++) {
+        total_length += (strlen(envp[i]) + 1);
+    }
+    total_length += (strlen(filename) + 1);
+    total_length = ROUND(total_length, 0x100);
+    uintptr_t kargv_pointer = (uintptr_t)ustack - total_length;
+    intptr_t kargv = kargv_pointer + pointers_length;
+
+    /* 1. store argc in the lowest */
+    *((int *)kargv_pointer) = argc;
+    kargv_pointer += sizeof(uint64_t);
+
+    /* 2. save argv pointer in 2nd lowest and argv in lowest strings */
+    uintptr_t new_argv = (uintptr_t)ustack - total_length + pointers_length;
+    for (int i = 0; i < argc; i++) {
+        *((uintptr_t *)kargv_pointer + i) = new_argv;
+        strcpy((char *)kargv, argv[i]);
+        new_argv += (strlen(argv[i]) + 1);
+        kargv += (strlen(argv[i]) + 1);
+    }
+    *((uintptr_t *)kargv_pointer + argc) = 0;
+    kargv_pointer += (argc + 1) * sizeof(uintptr_t);
+
+    /* 3. save envp pointer in 3rd lowest and envp in 2nd lowest strings */
+    for (int i = 0; i < envpc; i++) {
+        *((uintptr_t *)kargv_pointer + i) = new_argv;
+        strcpy((char *)kargv, envp[i]);
+        new_argv += strlen(envp[i]) + 1;
+        kargv += strlen(envp[i]) + 1;
+    }
+    *((uintptr_t *)kargv_pointer + envpc) = 0;
+    kargv_pointer += (envpc + 1) * sizeof(uintptr_t);
+
+    /* 4. save filename */
+    strcpy((char *)kargv, filename);
+    new_argv = new_argv + strlen(filename) + 1;
+    kargv += strlen(filename) + 1;
+
+    uintptr_t entry = loader(pcb, filename);
+    Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+    pcb->cp = ucontext(&pcb->as, kstack, (void *)entry);
+    pcb->cp->GPRx = ustack - total_length;
 }

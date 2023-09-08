@@ -106,8 +106,7 @@ static void display_inst(Decode *s, int rd, int rs1, int rs2, int64_t imm, bool 
         if (csr(imm)) {
             p += snprintf(p, max_log_len, "csr: %s, csr value: 0x%lx; ", csr_name(imm), *csr(imm));
         }
-    }
-    else {
+    } else {
         p += strlen(p);
         p += snprintf(p, max_log_len, "rd: ");
         if (rd >= 0 && rd < 32) {
@@ -191,19 +190,17 @@ static void inline decode_operand(Decode *s, uint32_t inst, int *rd, int *rs1, i
 
 static void fence_op(int imm, bool inst) {}
 
-
 #if defined CONFIG_ITRACE || defined OWN_DECODE
 #define opcode_mask 0x7f
 #define midcode_mask 0x7000
 #endif
-
 
 static int decode_exec(Decode *s) {
     int rd = 0, rs1 = 0, rs2 = 0;
     int64_t imm = 0;
     s->dnpc = s->snpc;
 
-/* clang-format off */
+    /* clang-format off */
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #ifdef CONFIG_ITRACE
 #define INSTPAT_MATCH(s, inst_name, type, ... /* execute body */ ) { \
@@ -225,7 +222,7 @@ static int decode_exec(Decode *s) {
     INSTPAT("??????? ????? ????? ??? ????? ???????", "inv", N, INV(s->pc));
     INSTPAT_END();
 
-/* clang-format on */
+    /* clang-format on */
 
     R(reg_zero) = 0; // reset $zero to 0
 

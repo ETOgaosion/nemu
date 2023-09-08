@@ -5,6 +5,7 @@
 #include <common.h>
 #include <klib-macros.h>
 #include <klib.h>
+#include <proc.h>
 
 // #define STRACE
 #ifdef STRACE
@@ -21,6 +22,9 @@ struct timeval {
     long tv_sec;  /* seconds */
     long tv_usec; /* microseconds */
 };
+
+void switch_boot_pcb();
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]);
 
 void do_syscall(Context *c) {
     uintptr_t a[4];
@@ -74,6 +78,16 @@ void do_syscall(Context *c) {
 #endif
         break;
     case SYS_brk:
+        c->GPR2 = 0;
+        break;
+    case SYS_execve:
+        if (fs_open((const char *)a[1], 0, 0) < 0) {
+            c->GPRx = (uintptr_t)-2;
+            break;
+        }
+        context_uload(current, (const char *)a[1], (char **)a[2], (char **)a[3]);
+        switch_boot_pcb();
+        yield();
         c->GPR2 = 0;
         break;
     case SYS_gettimeofday: {

@@ -155,8 +155,11 @@ install: app
 .PHONY: install
 
 ### Clean a single project (remove `build/`)
+build_dir = $(shell find . -name "build")
 clean:
-	rm -rf Makefile.html $(WORK_DIR)/build/ build/
+	for dir in $(build_dir) ; do \
+		rm -rf $$dir ; \
+	done
 .PHONY: clean
 
 ### Clean all sub-projects within depth 2 (and ignore errors)
@@ -168,8 +171,8 @@ $(CLEAN_ALL):
 .PHONY: clean-all $(CLEAN_ALL)
 
 ### Build fsimg and ramdisk for Nanos-lite
-APPS = pal
-TESTS = 
+APPS = nterm pal busybox
+TESTS =
 
 fsimg: $(addprefix apps/, $(APPS)) $(addprefix tests/, $(TESTS))
 	-for t in $^; do $(MAKE) -s -C $(NAVY_HOME)/$$t install; done

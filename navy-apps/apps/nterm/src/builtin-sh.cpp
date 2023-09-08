@@ -28,6 +28,24 @@ static void cmd_echo(char *args) {
   sh_printf("%s", args);
 }
 
+static void cmd_exec(char *args) {
+  args = strtok(args, "\n");
+  char *prog = strtok(args, " ");
+  char **argv = (char **)malloc(2 * sizeof(char *));
+  argv[0] = prog;
+  char *ptr = strtok(NULL, " ");
+  int argc = 1;
+  while (ptr)
+  {
+    argv[argc++] = ptr;
+    ptr = strtok(NULL, " ");
+    argv = (char **)realloc(argv, argc * sizeof(char *));
+  }
+  argv[argc] = NULL;
+  
+  execvp(prog, argv);
+}
+
 static struct {
     const char *name;
     const char *description;
@@ -35,7 +53,7 @@ static struct {
 } cmd_table[] = {
     {"help", "Display information about all supported commands", cmd_help},
     {"echo", "echo things", cmd_echo},
-
+    {"exec", "execute programs", cmd_exec},
 };
 
 #define NR_CMD sizeof(cmd_table) / sizeof(cmd_table[0])

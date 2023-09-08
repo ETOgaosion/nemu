@@ -1,5 +1,5 @@
-#include <proc.h>
 #include <am.h>
+#include <proc.h>
 
 #define MAX_NR_PROC 4
 
@@ -34,6 +34,7 @@ void hello_fun(void *arg) {
 
 void naive_uload(PCB *pcb, const char *filename);
 void context_kload(PCB *pcb, void *entry, void *arg);
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]);
 
 void init_proc() {
     // int *arg1 = malloc(sizeof(int));
@@ -42,6 +43,10 @@ void init_proc() {
     // *arg2 = 2;
     // context_kload(&pcb[0], hello_fun, arg1);
     // context_kload(&pcb[1], hello_fun, arg2);
+    // char *argv[] = {"/bin/hello", NULL};
+    char *envp[] = {"PATH=/usr/bin:/bin", NULL};
+    context_uload(&pcb[0], "/bin/nterm", NULL, envp);
+    
     switch_boot_pcb();
 
     Log("Initializing processes...");
@@ -61,8 +66,8 @@ void init_proc() {
 }
 
 Context *schedule(Context *prev) {
-    return NULL;
     current->cp = prev;
-    current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+    // current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+    current = &pcb[0];
     return current->cp;
 }

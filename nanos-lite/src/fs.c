@@ -10,7 +10,6 @@ typedef struct {
     char *name;
     size_t size;
     size_t disk_offset;
-    size_t open_offset;
     ReadFn read_func;
     WriteFn write_func;
     bool char_dev;
@@ -24,21 +23,23 @@ enum {
 };
 
 /* This is the information about all files in disk. */
-static Finfo file_table[] __attribute__((used)) = {
+static const Finfo file_table[] __attribute__((used)) = {
     [FD_STDIN] = {"stdin"},
-    [FD_STDOUT] = {"stdout", 0, 0, 0, 0, serial_write},
-    [FD_STDERR] = {"stderr", 0, 0, 0, 0, serial_write},
+    [FD_STDOUT] = {"stdout", 0, 0, 0, serial_write},
+    [FD_STDERR] = {"stderr", 0, 0, 0, serial_write},
 #include "files.h"
-    {"/dev/null", 0, 0, 0, null_read, null_write},
-    {"/dev/zero", 0, 0, 0, zero_read, zero_write},
-    {"/dev/events", 0, 0, 0, events_read, 0, true},
-    {"/dev/fb", 0, 0, 0, 0, fb_write},
-    {"/dev/sbctl", 0, 0, 0, sbctl_read, sbctl_write, true},
-    {"/dev/sb", 0, 0, 0, 0, sb_write, true},
-    {"/proc/dispinfo", 0, 0, 0, dispinfo_read, 0, true},
+    {"/dev/null", 0, 0, null_read, null_write},
+    {"/dev/zero", 0, 0, zero_read, zero_write},
+    {"/dev/events", 0, 0, events_read, 0, true},
+    {"/dev/fb", 0, 0, 0, fb_write},
+    {"/dev/sbctl", 0, 0, sbctl_read, sbctl_write, true},
+    {"/dev/sb", 0, 0, 0, sb_write, true},
+    {"/proc/dispinfo", 0, 0, dispinfo_read, 0, true},
 };
+ 
+#define file_table_size sizeof(file_table) / sizeof(Finfo)
 
-static const int file_table_size = sizeof(file_table) / sizeof(Finfo);
+static size_t file_open_offsets[file_table_size] = {0};
 
 void init_fs() {
     // TODO: initialize the size of /dev/fb
@@ -47,7 +48,7 @@ void init_fs() {
 int fs_open(const char *pathname, int flags, int mode) {
     for (int i = FD_FB; i < file_table_size; i++) {
         if (strcmp(file_table[i].name, pathname) == 0) {
-            file_table[i].open_offset = 0;
+            file_open_offsets[i] = 0;
             return i;
         }
     }
@@ -68,14 +69,14 @@ size_t fs_read(int fd, void *buf, size_t len) {
         break;
     default:
         if (file_table[fd].read_func) {
-            ret = file_table[fd].read_func(buf, file_table[fd].open_offset, len);
+            ret = file_table[fd].read_func(buf, file_open_offsets[fd], len);
         } else {
-            if (file_table[fd].open_offset < file_table[fd].size) {
-                if (file_table[fd].open_offset + len >= file_table[fd].size) {
-                    len = file_table[fd].size - file_table[fd].open_offset;
+            if (file_open_offsets[fd] < file_table[fd].size) {
+                if (file_open_offsets[fd] + len >= file_table[fd].size) {
+                    len = file_table[fd].size - file_open_offsets[fd];
                 }
-                ramdisk_read(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
-                file_table[fd].open_offset += len;
+                ramdisk_read(buf, file_table[fd].disk_offset + file_open_offsets[fd], len);
+                file_open_offsets[fd] += len;
                 ret = len;
             }
         }
@@ -101,14 +102,14 @@ size_t fs_write(int fd, const void *buf, size_t len) {
         break;
     default:
         if (file_table[fd].write_func) {
-            ret = file_table[fd].write_func(buf, file_table[fd].open_offset, len);
+            ret = file_table[fd].write_func(buf, file_open_offsets[fd], len);
         } else {
-            if (file_table[fd].open_offset < file_table[fd].size) {
-                if (file_table[fd].open_offset + len >= file_table[fd].size) {
-                    len = file_table[fd].size - file_table[fd].open_offset;
+            if (file_open_offsets[fd] < file_table[fd].size) {
+                if (file_open_offsets[fd] + len >= file_table[fd].size) {
+                    len = file_table[fd].size - file_open_offsets[fd];
                 }
-                ramdisk_write(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
-                file_table[fd].open_offset += len;
+                ramdisk_write(buf, file_table[fd].disk_offset + file_open_offsets[fd], len);
+                file_open_offsets[fd] += len;
                 ret = len;
             }
         }
@@ -133,19 +134,19 @@ size_t fs_lseek(int fd, size_t offset, int whence) {
     default: {
         switch (whence) {
         case SEEK_SET:
-            file_table[fd].open_offset = offset;
+            file_open_offsets[fd] = offset;
             break;
         case SEEK_CUR:
-            file_table[fd].open_offset += offset;
+            file_open_offsets[fd] += offset;
             break;
         case SEEK_END:
-            file_table[fd].open_offset = file_table[fd].size;
+            file_open_offsets[fd] = file_table[fd].size;
             break;
 
         default:
             break;
         }
-        ret = file_table[fd].open_offset;
+        ret = file_open_offsets[fd];
     } break;
     }
     return ret;
@@ -154,7 +155,7 @@ size_t fs_lseek(int fd, size_t offset, int whence) {
 int fs_close(int fd) {
     Assert(fd >= 0 && fd < file_table_size, "[fs close] error fd, fd: %d", fd);
     size_t ret = 0;
-    file_table[fd].open_offset = 0;
+    file_open_offsets[fd] = 0;
     return ret;
 }
 

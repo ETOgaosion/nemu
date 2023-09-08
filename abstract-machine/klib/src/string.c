@@ -10,7 +10,7 @@
 #define ALIGN (sizeof(size_t) - 1)
 #define ONES ((size_t)-1 / UCHAR_MAX)
 #define HIGHS (ONES * (UCHAR_MAX / 2 + 1))
-#define HASZERO(x) (((x)-ONES) & ~(x)&HIGHS)
+#define HASZERO(x) (((x)-ONES) & ~(x) & HIGHS)
 
 size_t strlen(const char *src) {
     int i;

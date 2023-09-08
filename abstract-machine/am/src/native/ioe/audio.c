@@ -51,8 +51,7 @@ static void audio_write(uint8_t *buf, int len) {
 void __am_audio_ctrl(AM_AUDIO_CTRL_T *ctrl) {
     if (!ctrl->freq || !ctrl->channels || !ctrl->samples) {
         SDL_PauseAudio(ctrl->pause_on);
-    }
-    else {
+    } else {
         SDL_AudioSpec s = {};
         s.freq = ctrl->freq;
         s.format = AUDIO_S16SYS;

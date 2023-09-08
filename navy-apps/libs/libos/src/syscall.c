@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 // helper macros
 #define _concat(x, y) x ## y
@@ -108,9 +109,9 @@ int _gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _write(2, "Not implement! _execve", strlen("Not implement! _execve"));
-  _exit(SYS_execve);
-  return 0;
+  int ret = _syscall_(SYS_execve, (intptr_t)fname, (intptr_t)argv, (intptr_t)envp);
+  errno = -ret;
+  return -1;
 }
 
 // Syscalls below are not used in Nanos-lite.
@@ -140,7 +141,7 @@ pid_t _fork() {
   return -1;
 }
 
-pid_t _vfork() {
+pid_t vfork() {
   assert(0);
   return -1;
 }
@@ -160,40 +161,40 @@ pid_t _wait(int *status) {
   return -1;
 }
 
-clock_t _times(void *buf) {
+clock_t times(void *buf) {
   assert(0);
   return 0;
 }
 
-int _pipe(int pipefd[2]) {
+int pipe(int pipefd[2]) {
   assert(0);
   return -1;
 }
 
-int _dup(int oldfd) {
+int dup(int oldfd) {
   assert(0);
   return -1;
 }
 
-int _dup2(int oldfd, int newfd) {
+int dup2(int oldfd, int newfd) {
   return -1;
 }
 
-unsigned int _sleep(unsigned int seconds) {
+unsigned int sleep(unsigned int seconds) {
   assert(0);
   return -1;
 }
 
-ssize_t _readlink(const char *pathname, char *buf, size_t bufsiz) {
+ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) {
   assert(0);
   return -1;
 }
 
-int _symlink(const char *target, const char *linkpath) {
+int symlink(const char *target, const char *linkpath) {
   assert(0);
   return -1;
 }
 
-int _ioctl(int fd, unsigned long request, ...) {
+int ioctl(int fd, unsigned long request, ...) {
   return -1;
 }
