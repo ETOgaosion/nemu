@@ -202,7 +202,7 @@ static int decode_exec(Decode *s) {
 
     /* clang-format off */
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
-#ifdef CONFIG_ITRACE
+#if defined CONFIG_ITRACE || defined CONFIG_MTRACE
 #define INSTPAT_MATCH(s, inst_name, type, ... /* execute body */ ) { \
     strcpy(s->isa.inst.name, inst_name); \
     decode_operand(s, s->isa.inst.val, &rd, &rs1, &rs2, &imm, concat(TYPE_, type)); \

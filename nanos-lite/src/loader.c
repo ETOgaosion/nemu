@@ -34,6 +34,18 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
         fs_lseek(fd, ehdr->e_phoff + i * ehdr->e_phentsize, SEEK_SET);
         fs_read(fd, (void *)phdr, ehdr->e_phentsize);
         if (phdr->p_type == PT_LOAD) {
+            #ifdef HAS_VME
+            if (pcb) {
+                uintptr_t vaddr_start = (uintptr_t)phdr->p_vaddr & 0xfffffffffffff000;
+                uintptr_t vaddr_stop = ((uintptr_t)phdr->p_vaddr + phdr->p_memsz - 1) & 0xfffffffffffff000;
+                int page_num = ((vaddr_stop - vaddr_start) >> 12) + 1;
+                for (int i = 0; i < page_num; i++)
+                {
+                    map(&pcb->as, (void *)(vaddr_start + i * PGSIZE), (void *)vaddr_start + i * PGSIZE, 0);
+                }
+                pcb->max_brk = vaddr_stop + PGSIZE;
+            }
+            #endif
             void *bin = (void *)phdr->p_vaddr;
             fs_lseek(fd, phdr->p_offset, SEEK_SET);
             fs_read(fd, bin, phdr->p_filesz);
@@ -70,7 +82,16 @@ int strlistlen(char *src[]) {
 
 void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
     Log("load file: %s", filename);
-    uintptr_t ustack = (uintptr_t)(new_page(8) + 8 * PGSIZE);
+    #ifdef HAS_VME
+    protect(&pcb->as);
+    #endif
+    uintptr_t ustack_base = (uintptr_t)new_page(8);
+    uintptr_t ustack =  ustack_base + 8 * PGSIZE;
+    #ifdef HAS_VME
+    for (int i = 0; i < 8; i++) {
+        map(&pcb->as, (void *)ustack_base + i * PGSIZE, (void *)ustack_base + i * PGSIZE, 0);
+    }
+    #endif
     int argc = strlistlen((char **)argv);
     int envpc = strlistlen((char **)envp);
     int total_length = (argc + envpc + 3) * sizeof(uintptr_t *) + SIZE_RESTORE;

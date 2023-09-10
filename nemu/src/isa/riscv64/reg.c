@@ -52,6 +52,9 @@ word_t *csr(int num) {
     case csr_mcause:
         return &cpu.mcause;
         break;
+    case csr_satp:
+        return &cpu.satp;
+        break;
     default:
         break;
     }

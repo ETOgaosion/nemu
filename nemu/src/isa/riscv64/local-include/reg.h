@@ -51,6 +51,7 @@
 #define reg_t5 30
 #define reg_t6 31
 
+#define csr_satp 0x180
 #define csr_mstatus 0x300
 #define csr_mtvec 0x305
 #define csr_mepc 0x341

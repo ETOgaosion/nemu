@@ -36,7 +36,7 @@ static const Finfo file_table[] __attribute__((used)) = {
     {"/dev/sb", 0, 0, 0, sb_write, true},
     {"/proc/dispinfo", 0, 0, dispinfo_read, 0, true},
 };
- 
+
 #define file_table_size sizeof(file_table) / sizeof(Finfo)
 
 static size_t file_open_offsets[file_table_size] = {0};

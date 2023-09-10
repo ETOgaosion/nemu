@@ -106,22 +106,22 @@ bool itrace_log_enable() {
 }
 #endif
 #ifdef CONFIG_DTRACE
-bool dlog_enable() {
+bool dtrace_log_enable() {
     return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst_d >= CONFIG_TRACE_START) && (g_nr_guest_inst_d <= CONFIG_TRACE_END), false);
 }
 #endif
 #ifdef CONFIG_MTRACE
-bool mlog_enable() {
+bool mtrace_log_enable() {
     return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst_m >= CONFIG_TRACE_START) && (g_nr_guest_inst_m <= CONFIG_TRACE_END), false);
 }
 #endif
 #ifdef CONFIG_FTRACE
-bool flog_enable() {
+bool ftrace_log_enable() {
     return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst_f >= CONFIG_TRACE_START) && (g_nr_guest_inst_f <= CONFIG_TRACE_END), false);
 }
 #endif
 #ifdef CONFIG_ETRACE
-bool elog_enable() {
+bool etrace_log_enable() {
     return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst_e >= CONFIG_TRACE_START) && (g_nr_guest_inst_e <= CONFIG_TRACE_END), false);
 }
 #endif

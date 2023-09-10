@@ -43,10 +43,11 @@ void init_proc() {
     // *arg2 = 2;
     // context_kload(&pcb[0], hello_fun, arg1);
     // context_kload(&pcb[1], hello_fun, arg2);
-    // char *argv[] = {"/bin/hello", NULL};
-    char *envp[] = {"PATH=/usr/bin:/bin", NULL};
-    context_uload(&pcb[0], "/bin/nterm", NULL, envp);
-    
+    char *argv[] = {"--skip", NULL};
+    // char *envp[] = {"PATH=/usr/bin:/bin", NULL};
+    // context_uload(&pcb[0], "/bin/nterm", NULL, envp);
+    context_uload(&pcb[0], "/bin/pal", argv, NULL);
+
     switch_boot_pcb();
 
     Log("Initializing processes...");

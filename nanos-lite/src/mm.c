@@ -1,18 +1,19 @@
-#include <memory.h>
 #include <am.h>
+#include <memory.h>
 
 static void *pf = NULL;
+extern char *hbrk;
 
 void *new_page(size_t nr_page) {
-  void *old = pf;
-  memset(pf, 0, nr_page * PGSIZE);
-  pf += nr_page * PGSIZE;
-  return old;
+    void *old = pf;
+    memset(pf, 0, nr_page * PGSIZE);
+    pf += nr_page * PGSIZE;
+    return old;
 }
 
 #ifdef HAS_VME
 static void *pg_alloc(int n) {
-    return NULL;
+    return new_page(n / PGSIZE);
 }
 #endif
 
@@ -27,7 +28,7 @@ int mm_brk(uintptr_t brk) {
 
 void init_mm() {
     pf = (void *)ROUNDUP(heap.start, PGSIZE);
-    Log("free physical pages starting from %p", pf);
+    Log("free physical pages starting from 0x%x", pf);
 
 #ifdef HAS_VME
     vme_init(pg_alloc, free_page);

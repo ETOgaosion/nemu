@@ -71,15 +71,17 @@ word_t paddr_read(Decode *s, paddr_t addr, int len) {
 
         if (read) {
 #ifdef CONFIG_MTRACE
-            char *p = s->mtrace_logbuf;
-            int max_log_len = sizeof(s->mtrace_logbuf) - 1;
-            p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
-            p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, ret);
+            if (s) {
+                char *p = s->mtrace_logbuf;
+                int max_log_len = sizeof(s->mtrace_logbuf) - 1;
+                p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s, ", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
+                p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, ret);
+            }
 #endif
 
 #ifdef CONFIG_MTRACE_COND
-            if (MTRACE_COND) {
-                mtrace_log_write("%s\n\n", s->mtrace_logbuf);
+            if (s && MTRACE_COND) {
+                mtrace_log_write("%s\n", s->mtrace_logbuf);
             }
 #endif
         }
@@ -105,15 +107,17 @@ void paddr_write(Decode *s, paddr_t addr, int len, word_t data) {
         writen = true;
         if (writen) {
 #ifdef CONFIG_MTRACE
-            char *p = s->mtrace_logbuf;
-            int max_log_len = sizeof(s->mtrace_logbuf) - 1;
-            p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s\n", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
-            p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, data);
+            if (s) {
+                char *p = s->mtrace_logbuf;
+                int max_log_len = sizeof(s->mtrace_logbuf) - 1;
+                p += snprintf(p, max_log_len, "[%lld] pc: 0x%lx, inst: 0x%x, instruction: %s, ", s->count, s->pc, s->isa.inst.val, s->isa.inst.name);
+                p += snprintf(p, max_log_len, "access memory: 0x%x, len: %d, data: 0x%lx", addr, len, data);
+            }
 #endif
 
 #ifdef CONFIG_MTRACE_COND
-            if (MTRACE_COND) {
-                mtrace_log_write("%s\n\n", s->mtrace_logbuf);
+            if (s && MTRACE_COND) {
+                mtrace_log_write("%s\n", s->mtrace_logbuf);
             }
 #endif
         }
