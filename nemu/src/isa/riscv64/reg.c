@@ -75,6 +75,9 @@ const char *csr_name(int num) {
     case csr_mcause:
         return "mcause";
         break;
+    case csr_satp:
+        return "satp";
+        break;
     default:
         panic("Not supported csr register: %d", num);
         break;

@@ -41,16 +41,12 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
     PTE *page_base = (uint64_t *)pgdir;
     /* second page */
     PTE entry = paddr_read(NULL, (uint64_t)page_base + (vpn[2] << 3), 8);
-    Assert(entry > 0 && entry & _PAGE_PRESENT, "[Error] page walk, incorrent vpn2, entry: 0x%lx, pgdir: 0x%lx, vaddr: 0x%lx, vpn[2]: %ld, len: %d, type: %d", entry, (uint64_t)pgdir, vaddr, vpn[2], len, type);
     PTE *second_page = (uint64_t *)get_pa(entry);
     /* finally page */
     entry = paddr_read(NULL, (uint64_t)second_page + (vpn[1] << 3), 8);
-    Assert(entry > 0 && entry & _PAGE_PRESENT, "[Error] page walk, incorrent vpn1, entry: 0x%lx, second_page: 0x%lx, vaddr: 0x%lx, vpn[2]: %ld, len: %d, type: %d", entry, (uint64_t)second_page, vaddr, vpn[1], len, type);
     PTE *third_page = (uint64_t *)get_pa(entry);
     /* physical addr */
     entry = paddr_read(NULL, (uint64_t)third_page + (vpn[0] << 3), 8);
-    Assert(entry > 0 && entry & _PAGE_PRESENT, "[Error] page walk, incorrent vpn0, entry: 0x%lx, third_page: 0x%lx, vaddr: 0x%lx, vpn[2]: %ld, len: %d, type: %d", entry, (uint64_t)third_page, vaddr, vpn[0], len, type);
-    paddr_t ret = (get_pa(entry) | (vaddr & ((0x1 << 13) - 1)));
-    Assert(ret == vaddr, "[Error] Identical Mapping error, ret: 0x%x, vaddr: 0x%lx", ret, vaddr);
+    paddr_t ret = (get_pa(entry) | (vaddr & ((0x1lu << 12) - 1)));
     return ret;
 }

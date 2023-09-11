@@ -49,7 +49,7 @@
   INSTPAT("0100000 ????? ????? 101 ????? 0011011", "sraiw", I, R(rd) = sign_extend(R32S(rs1) >> (imm & 0b11111), 32));
   INSTPAT("0000 ???? ???? 00000 000 00000 0001111", "fence", I, fence_op(imm, false));
   INSTPAT("0000 0000 0000 00000 001 00000 0001111", "fencei", N, fence_op(0, true));
-  INSTPAT("000000000000 00000 000 00000 1110011", "ecall", N, isa_raise_intr(s, ECALL_M));
+  INSTPAT("000000000000 00000 000 00000 1110011", "ecall", N, isa_raise_intr(s, ECALL));
   INSTPAT("000000000001 00000 000 00000 1110011", "ebreak", N, NEMUTRAP(s->pc, R(reg_a0)));
   INSTPAT("0001000 00010 00000 000 00000 1110011", "sret", N, NEMUTRAP(s->pc, R(reg_a0)));
   INSTPAT("0011000 00010 00000 000 00000 1110011", "mret", N, s->dnpc = isa_ret_intr());

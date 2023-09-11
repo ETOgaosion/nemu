@@ -37,6 +37,11 @@ void context_kload(PCB *pcb, void *entry, void *arg);
 void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]);
 
 void init_proc() {
+    Context *ctx = (Context *)malloc(sizeof(Context));
+    ctx->gpr[reg_tp] = (uintptr_t)ctx;
+    pcb_boot.cp = ctx;
+    __asm__ __volatile__("mv tp, %0" : : "r"(ctx) :);
+
     // int *arg1 = malloc(sizeof(int));
     // *arg1 = 1;
     // int *arg2 = malloc(sizeof(int));
@@ -46,7 +51,8 @@ void init_proc() {
     char *argv[] = {"--skip", NULL};
     // char *envp[] = {"PATH=/usr/bin:/bin", NULL};
     // context_uload(&pcb[0], "/bin/nterm", NULL, envp);
-    context_uload(&pcb[0], "/bin/pal", argv, NULL);
+    context_uload(&pcb[1], "/bin/pal", argv, NULL);
+    // context_uload(&pcb[0], "/bin/dummy", NULL, NULL);
 
     switch_boot_pcb();
 
@@ -69,6 +75,7 @@ void init_proc() {
 Context *schedule(Context *prev) {
     current->cp = prev;
     // current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
-    current = &pcb[0];
+    // Log("current == &pcb[0]: %d", current == &pcb[0]);
+    current = &pcb[1];
     return current->cp;
 }

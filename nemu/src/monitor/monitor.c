@@ -20,7 +20,7 @@
 void init_rand();
 void init_log(const char *log_file, const char *itrace_log_file, const char *dtrace_log_file, const char *mtrace_log_file, const char *ftrace_log_file, const char *etrace_log_file);
 void init_mem();
-void init_difftest(char *ref_so_file, long img_size, int port);
+void init_difftest(char *ref_so_file, int port);
 void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
@@ -165,10 +165,10 @@ void init_monitor(int argc, char *argv[]) {
     init_isa();
 
     /* Load the image to memory. This will overwrite the built-in image. */
-    long img_size = load_img();
+    load_img();
 
     /* Initialize differential testing. */
-    init_difftest(diff_so_file, img_size, difftest_port);
+    init_difftest(diff_so_file, difftest_port);
 
     /* Initialize the simple debugger. */
     init_sdb();

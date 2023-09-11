@@ -29,6 +29,10 @@ typedef struct {
     word_t satp;
 } riscv64_CPU_state;
 
+#define MSTATUS_MPP_BITS 0x1800
+#define MSTATUS_SUM_BITS 0x40000
+#define MSTATUS_MXR_BITS 0x80000
+
 // decode
 typedef struct {
     struct {

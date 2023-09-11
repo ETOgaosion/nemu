@@ -59,3 +59,22 @@ export PULSE_SERVER=tcp:$HOST_IP
 #### ELF
 
 Use `riscv64-unknown-elf-readelf -h xxx.elf` can read header and find Magic is always: `Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00`
+
+### pa4
+
+#### VME
+
+This is the **most difficult part** in the whole pa, for reasons below:
+
+- Lack of debug tools (Infrastructures)
+    - Difftests not working anymore, data in fs is wrongly set
+    - Test our experience to find real reason which causes the bug
+    - Log is the most sufficient tool, `mtrace` and `itrace` does a lot of help
+
+Here are some holes (坑) that you can pre-read to avoid falling in:
+
+- Notice the bit masks, set them correctly
+- AM's `malloc` should be set carefully, separated from nanos' `new_page`. There is an easy way to resolve this: divide the free memory space. I've tried to mix them up, but failed, still have misunderstandable bugs.
+- Things that the lecture notes not mention
+    - context switch when trapping should change: **`sp` should not be the one used in user stack, but shall be set to kernel stack**. So not only `sp` needs to be used, but also **`tp` as trap pointer, pointing to a fixed context location of each process**. When user program trap in, the sp should be set to tp as context base location, and kernel tasks should execute with this kernel stack.
+    - But here is a problem: We need to support nested trap, because yield could happen in M mode. So we should put `mtvec` to a new kernel trap function `__am_asm_trap_m` as long as we enter `__am_asm_trap`. As we should support nested trap, we can simply make `sp` decrease each time as original code. Current environment is at high priviledge mode, sp is on kernel stack of course.

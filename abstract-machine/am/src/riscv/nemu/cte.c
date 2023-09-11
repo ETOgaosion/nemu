@@ -33,7 +33,11 @@ enum exceptions {
     STORE_PAGE_FAULT = 15
 };
 
+extern void __am_get_cur_as(Context *c);
+extern void __am_switch(Context *c);
+
 Context *__am_irq_handle(Context *c) {
+    __am_get_cur_as(c);
     if (user_handler) {
         Event ev = {0};
         if (c->mcause & ((uint64_t)0x1 << 63)) {
@@ -50,6 +54,7 @@ Context *__am_irq_handle(Context *c) {
         } else {
             switch (c->mcause) {
             case ECALL_M:
+            case ECALL_U:
                 if (c->gpr[reg_a7] == -1) {
                     ev.event = EVENT_YIELD;
                 } else {
@@ -65,7 +70,7 @@ Context *__am_irq_handle(Context *c) {
         c = user_handler(ev, c);
         assert(c != NULL);
     }
-
+    __am_switch(c);
     return c;
 }
 
@@ -86,8 +91,11 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
     memset((void *)ctx, 0, sizeof(Context));
     ctx->gpr[reg_a0] = (uintptr_t)arg;
     ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->gpr[reg_tp] = (uintptr_t)ctx;
+    Log("kcontext: 0x%lx", (uintptr_t)ctx);
     ctx->mepc = (uintptr_t)entry;
     ctx->mstatus = 0xa00001800;
+    ctx->pdir = NULL;
     return ctx;
 }
 

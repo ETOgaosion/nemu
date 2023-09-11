@@ -15,9 +15,10 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <memory/vaddr.h>
 
 word_t vaddr_ifetch(vaddr_t addr, int len) {
-    return paddr_read(NULL, addr, len);
+    return vaddr_read(NULL, addr, len);
 }
 
 word_t vaddr_read(Decode *s, vaddr_t addr, int len) {

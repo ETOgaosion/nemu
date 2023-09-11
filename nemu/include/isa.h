@@ -64,7 +64,8 @@ enum exceptions {
     STORE_ACCESS_FAULT,
     ECALL_U,
     ECALL_S,
-    ECALL_M = 11,
+    ECALL,
+    ECALL_M,
     INST_PAGE_FAULT,
     LOAD_PAGE_FAULT,
     STORE_PAGE_FAULT = 15

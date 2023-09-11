@@ -204,7 +204,7 @@ static inline void riscv64_fencei(Decode *s, uint32_t inst, int *rd, int *rs1, i
 }
 static inline void riscv64_ecall(Decode *s, uint32_t inst, int *rd, int *rs1, int *rs2, int64_t *imm) {
     decode_operand(s, inst, rd, rs1, rs2, imm, TYPE_N);
-    isa_raise_intr(s, ECALL_M);
+    isa_raise_intr(s, ECALL);
 }
 static inline void riscv64_ebreak(Decode *s, uint32_t inst, int *rd, int *rs1, int *rs2, int64_t *imm) {
     decode_operand(s, inst, rd, rs1, rs2, imm, TYPE_N);

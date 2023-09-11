@@ -13,25 +13,26 @@
 #endif
 
 #define REGS(f) \
-      f( 1)       f( 3) f( 4) f( 5) f( 6) f( 7) f( 8) f( 9) \
+      f( 1) f( 2) f( 3) f( 4) f( 5) f( 6) f( 7) f( 8) f( 9) \
 f(10) f(11) f(12) f(13) f(14) f(15) f(16) f(17) f(18) f(19) \
 f(20) f(21) f(22) f(23) f(24) f(25) f(26) f(27) f(28) f(29) \
 f(30) f(31)
 
-#define PUSH(n) STORE concat(x, n), (n * XLEN)(sp);
-#define POP(n)  LOAD  concat(x, n), (n * XLEN)(sp);
+#define PUSH(n) STORE concat(x, n), (n * XLEN)(tp);
+#define POP(n)  LOAD  concat(x, n), (n * XLEN)(tp);
 
 #define CONTEXT_SIZE  ((32 + 3 + 1) * XLEN)
 #define OFFSET_SP     ( 2 * XLEN)
+#define OFFSET_TP     ( 4 * XLEN)
 #define OFFSET_CAUSE  (32 * XLEN)
 #define OFFSET_STATUS (33 * XLEN)
 #define OFFSET_EPC    (34 * XLEN)
 
 .align 3
-.globl __am_asm_trap
-__am_asm_trap:
+.globl __am_asm_trap_m
+__am_asm_trap_m:
   addi sp, sp, -CONTEXT_SIZE
-
+  mv tp, sp
   MAP(REGS, PUSH)
 
   csrr t0, mcause
@@ -41,18 +42,49 @@ __am_asm_trap:
   STORE t0, OFFSET_CAUSE(sp)
   STORE t1, OFFSET_STATUS(sp)
   STORE t2, OFFSET_EPC(sp)
-  STORE sp, OFFSET_SP(sp)
 
   mv a0, sp
   jal __am_irq_handle
-  LOAD sp, OFFSET_SP(a0)
+  LOAD tp, OFFSET_TP(a0)
 
-  LOAD t1, OFFSET_STATUS(sp)
-  LOAD t2, OFFSET_EPC(sp)
+  LOAD t1, OFFSET_STATUS(tp)
+  LOAD t2, OFFSET_EPC(tp)
   csrw mstatus, t1
   csrw mepc, t2
 
   MAP(REGS, POP)
-
   addi sp, sp, CONTEXT_SIZE
+  mret
+
+
+.align 3
+.globl __am_asm_trap
+__am_asm_trap:
+  MAP(REGS, PUSH)
+  mv sp, tp
+
+  lla t0, __am_asm_trap_m
+  csrw mtvec, t0
+
+  csrr t0, mcause
+  csrr t1, mstatus
+  csrr t2, mepc
+
+  STORE t0, OFFSET_CAUSE(sp)
+  STORE t1, OFFSET_STATUS(sp)
+  STORE t2, OFFSET_EPC(sp)
+
+  mv a0, sp
+  jal __am_irq_handle
+  LOAD tp, OFFSET_TP(a0)
+
+  LOAD t1, OFFSET_STATUS(tp)
+  LOAD t2, OFFSET_EPC(tp)
+  csrw mstatus, t1
+  csrw mepc, t2
+
+  lla t0, __am_asm_trap
+  csrw mtvec, t0
+
+  MAP(REGS, POP)
   mret

@@ -1,4 +1,5 @@
 #include <am.h>
+#include <arch/riscv64-nemu.h>
 #include <klib.h>
 #include <nemu.h>
 
@@ -33,7 +34,7 @@ bool vme_init(void *(*pgalloc_f)(int), void (*pgfree_f)(void *)) {
     for (i = 0; i < LENGTH(segments); i++) {
         void *va = segments[i].start;
         for (; va < segments[i].end; va += PGSIZE) {
-            map(&kas, va, va, 0);
+            map(&kas, va, va, _PAGE_EXEC | _PAGE_WRITE | _PAGE_READ | _PAGE_USER);
         }
     }
     set_satp(kas.ptr);
@@ -60,57 +61,6 @@ void __am_get_cur_as(Context *c) {
 void __am_switch(Context *c) {
     if (vme_enable && c->pdir != NULL) {
         set_satp(c->pdir);
-    }
-}
-
-#define VA_MASK ((1lu << 39) - 1)
-#define NORMAL_PAGE_SHIFT 12lu
-#define NORMAL_PGSIZE (1lu << NORMAL_PAGE_SHIFT)
-#define PPN_BITS 9lu
-
-/*
- * PTE format:
- * | XLEN-1  10 | 9             8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
- *       PFN      reserved for SW   D   A   G   U   X   W   R   V
- */
-
-#define _PAGE_ACCESSED_OFFSET 6
-
-#define _PAGE_PRESENT ((uint64_t)1 << 0)
-#define _PAGE_READ ((uint64_t)1 << 1)   /* Readable */
-#define _PAGE_WRITE ((uint64_t)1 << 2)  /* Writable */
-#define _PAGE_EXEC ((uint64_t)1 << 3)   /* Executable */
-#define _PAGE_USER ((uint64_t)1 << 4)   /* User */
-#define _PAGE_GLOBAL ((uint64_t)1 << 5) /* Global */
-#define _PAGE_ACCESSED (1 << 6)         /* Set by hardware on any access */
-#define _PAGE_DIRTY ((uint64_t)1 << 7)  /* Set by hardware on any write */
-#define _PAGE_SOFT ((uint64_t)1 << 8)   /* Reserved for software */
-
-#define _PAGE_PFN_SHIFT 10lu
-
-#define MAP_KERNEL 1
-#define MAP_USER 2
-
-typedef uint64_t PTE;
-
-static inline uint64_t get_pfn(PTE entry) {
-    return (entry >> _PAGE_PFN_SHIFT);
-}
-
-static inline void set_pfn(PTE *entry, uint64_t pfn) {
-    uint64_t temp10 = (*entry) % ((uint64_t)1 << 10);
-    *entry = (pfn << 10) | temp10;
-}
-
-static inline void set_attribute(PTE *entry, uint64_t bits) {
-    uint64_t pfn_temp = (*entry) >> 10;
-    *entry = (pfn_temp << 10) | bits;
-}
-
-static inline void clear_pgdir(uintptr_t pgdir_addr) {
-    PTE *pgaddr = (PTE *)pgdir_addr;
-    for (int i = 0; i < 512; i++) {
-        pgaddr[i] = 0;
     }
 }
 
@@ -146,15 +96,18 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
     /* maybe need to assign U to low */
     // Generate flags
     /* the R,W,X == 1 will be the leaf */
-    uint64_t pte_flags = _PAGE_PRESENT | (uint64_t)prot;
+    uint64_t pte_flags = _PAGE_PRESENT | _PAGE_ACCESSED | _PAGE_DIRTY | (uint64_t)prot;
     set_attribute(&third_page[vpn[0]], pte_flags);
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
     Context *ctx = kstack.end - sizeof(Context);
     memset((void *)ctx, 0, sizeof(Context));
-    ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->gpr[reg_sp] = (uintptr_t)as->area.end;
+    ctx->gpr[reg_tp] = (uintptr_t)ctx;
     ctx->mepc = (uintptr_t)entry;
-    ctx->mstatus = 0xa00001800;
+    ctx->mstatus = 0xa000c0000;
+    ctx->pdir = as->ptr;
+    Log("ucontext: 0x%lx", (uintptr_t)ctx);
     return ctx;
 }

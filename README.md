@@ -25,7 +25,7 @@ Progress (2023):
         - [x] keyboard
         - [x] VGA
         - [x] audio
-- [ ] pa3: Batch OS
+- [ ] pa3: batch OS
     - [x] pa3-1: hardware support [8.27]
         - [x] csr registers and operations
         - [x] trap and context switch
@@ -38,10 +38,14 @@ Progress (2023):
         - [x] IOE: serial, timer, keyboard, vedio
         - [ ] TODO: other VFS directories
 - [ ] pa4: TDM OS (Time-Division Multiplexing)
-    - [x] pa4-1: Multiplexing [9.8]
+    - [x] pa4-1: multiplexing [9.8]
         - [x] context switch
         - [x] kernel threads and user processes
         - [x] all tests pass
+    - [x] pa4-2: VME [9.11]
+        - [x] VME Support
+            - **THIS IS THE MOST DIFFICULT PART**, for more info like suggestions, check [./doc](./doc/main.md#VME)
+        - [x] nested trap support, S/U mode support
 
 Beyond normal contents, TODOs:
 

@@ -22,8 +22,17 @@ void isa_raise_intr(Decode *s, word_t NO) {
     /* TODO: Trigger an interrupt/exception with ``NO''.
      * Then return the address of the interrupt/exception vector.
      */
-    cpu.mcause = NO;
+    if (NO == ECALL) {
+        if (cpu.mstatus & MSTATUS_MPP_BITS) {
+            cpu.mcause = ECALL_M;
+        } else {
+            cpu.mcause = ECALL_U;
+        }
+    } else {
+        cpu.mcause = NO;
+    }
     cpu.mepc = s->pc;
+    cpu.mstatus |= MSTATUS_MPP_BITS;
     g_nr_guest_inst_e++;
 
 #ifdef CONFIG_ETRACE
@@ -43,6 +52,7 @@ void isa_raise_intr(Decode *s, word_t NO) {
 }
 
 vaddr_t isa_ret_intr() {
+    cpu.mstatus &= ~MSTATUS_MPP_BITS;
     return cpu.mepc;
 }
 

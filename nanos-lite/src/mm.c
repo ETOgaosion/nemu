@@ -1,7 +1,10 @@
 #include <am.h>
+#include <arch/riscv64-nemu.h>
+#include <klib-macros.h>
 #include <memory.h>
+#include <proc.h>
 
-static void *pf = NULL;
+extern void *pf;
 extern char *hbrk;
 
 void *new_page(size_t nr_page) {
@@ -23,6 +26,14 @@ void free_page(void *p) {
 
 /* The brk() system call handler. */
 int mm_brk(uintptr_t brk) {
+    if (brk > current->max_brk) {
+        int page_num = (brk - current->max_brk + PGSIZE - 1) / PGSIZE;
+        void *pg = new_page(page_num);
+        for (int i = 0; i < page_num; i++) {
+            map(&current->as, (void *)(current->max_brk + i * PGSIZE), pg + i * PGSIZE, _PAGE_WRITE | _PAGE_READ | _PAGE_USER);
+        }
+        current->max_brk += page_num * PGSIZE;
+    }
     return 0;
 }
 

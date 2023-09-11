@@ -1,6 +1,7 @@
 #include "fs.h"
 #include "memory.h"
 #include "proc.h"
+#include <arch/riscv64-nemu.h>
 #include <elf.h>
 
 #ifdef __LP64__
@@ -34,28 +35,36 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
         fs_lseek(fd, ehdr->e_phoff + i * ehdr->e_phentsize, SEEK_SET);
         fs_read(fd, (void *)phdr, ehdr->e_phentsize);
         if (phdr->p_type == PT_LOAD) {
-            #ifdef HAS_VME
+            void *pg = (void *)(phdr->p_vaddr & 0xfffffffffffff000);
+#ifdef HAS_VME
             if (pcb) {
-                uintptr_t vaddr_start = (uintptr_t)phdr->p_vaddr & 0xfffffffffffff000;
-                uintptr_t vaddr_stop = ((uintptr_t)phdr->p_vaddr + phdr->p_memsz - 1) & 0xfffffffffffff000;
-                int page_num = ((vaddr_stop - vaddr_start) >> 12) + 1;
-                for (int i = 0; i < page_num; i++)
-                {
-                    map(&pcb->as, (void *)(vaddr_start + i * PGSIZE), (void *)vaddr_start + i * PGSIZE, 0);
+                uintptr_t vaddr_start = (uintptr_t)pg;
+                uintptr_t vaddr_end = ((uintptr_t)phdr->p_vaddr + phdr->p_memsz - 1) & 0xfffffffffffff000;
+                int page_num = ((vaddr_end - vaddr_start) >> 12);
+                if (phdr->p_vaddr & 0xfff) {
+                    page_num++;
                 }
-                pcb->max_brk = vaddr_stop + PGSIZE;
+                if ((phdr->p_vaddr + phdr->p_memsz) & 0xfff) {
+                    page_num++;
+                }
+                pg = new_page(page_num);
+                for (int i = 0; i < page_num; i++) {
+                    map(&pcb->as, (void *)vaddr_start + i * PGSIZE, pg + i * PGSIZE, _PAGE_EXEC | _PAGE_WRITE | _PAGE_READ | _PAGE_USER);
+                }
+                pcb->max_brk = vaddr_end + PGSIZE;
             }
-            #endif
-            void *bin = (void *)phdr->p_vaddr;
+#endif
+            void *bin = pg + (phdr->p_vaddr & 0xfff);
             fs_lseek(fd, phdr->p_offset, SEEK_SET);
             fs_read(fd, bin, phdr->p_filesz);
             memset(bin + phdr->p_filesz, 0, phdr->p_memsz - phdr->p_filesz);
         }
     }
+    uintptr_t ret = ehdr->e_entry;
     fs_close(fd);
     free(ehdr);
     free(phdr);
-    return ehdr->e_entry;
+    return ret;
 }
 
 void naive_uload(PCB *pcb, const char *filename) {
@@ -64,7 +73,7 @@ void naive_uload(PCB *pcb, const char *filename) {
 }
 
 void context_kload(PCB *pcb, void *entry, void *arg) {
-    Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+    Area kstack = {(void *)pcb->stack, (void *)pcb->stack + 8 * PGSIZE};
     pcb->cp = kcontext(kstack, entry, arg);
 }
 
@@ -82,16 +91,16 @@ int strlistlen(char *src[]) {
 
 void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
     Log("load file: %s", filename);
-    #ifdef HAS_VME
+#ifdef HAS_VME
     protect(&pcb->as);
-    #endif
+#endif
     uintptr_t ustack_base = (uintptr_t)new_page(8);
-    uintptr_t ustack =  ustack_base + 8 * PGSIZE;
-    #ifdef HAS_VME
+    uintptr_t ustack = ustack_base + 8 * PGSIZE;
+#ifdef HAS_VME
     for (int i = 0; i < 8; i++) {
-        map(&pcb->as, (void *)ustack_base + i * PGSIZE, (void *)ustack_base + i * PGSIZE, 0);
+        map(&pcb->as, (void *)pcb->as.area.end - 8 * PGSIZE + i * PGSIZE, (void *)ustack_base + i * PGSIZE, _PAGE_EXEC | _PAGE_WRITE | _PAGE_READ | _PAGE_USER);
     }
-    #endif
+#endif
     int argc = strlistlen((char **)argv);
     int envpc = strlistlen((char **)envp);
     int total_length = (argc + envpc + 3) * sizeof(uintptr_t *) + SIZE_RESTORE;
@@ -138,7 +147,7 @@ void context_uload(PCB *pcb, const char *filename, char *const argv[], char *con
     kargv += strlen(filename) + 1;
 
     uintptr_t entry = loader(pcb, filename);
-    Area kstack = {(void *)pcb->stack, (void *)(pcb->stack + 1)};
+    Area kstack = {(void *)pcb->stack, (void *)pcb->stack + 8 * PGSIZE};
     pcb->cp = ucontext(&pcb->as, kstack, (void *)entry);
-    pcb->cp->GPRx = ustack - total_length;
+    pcb->cp->GPRx = (uintptr_t)pcb->as.area.end - total_length;
 }
