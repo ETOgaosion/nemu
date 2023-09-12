@@ -25,7 +25,7 @@ Progress (2023):
         - [x] keyboard
         - [x] VGA
         - [x] audio
-- [ ] pa3: batch OS
+- [x] pa3: batch OS [8.30]
     - [x] pa3-1: hardware support [8.27]
         - [x] csr registers and operations
         - [x] trap and context switch
@@ -36,8 +36,8 @@ Progress (2023):
     - [x] pa3-3: FS, VFS, devices [8.30]
         - [x] FS operations
         - [x] IOE: serial, timer, keyboard, vedio
-        - [ ] TODO: other VFS directories
-- [ ] pa4: TDM OS (Time-Division Multiplexing)
+        - [x] TODO: other VFS directories
+- [x] pa4: TDM OS (Time-Division Multiplexing) [9.12]
     - [x] pa4-1: multiplexing [9.8]
         - [x] context switch
         - [x] kernel threads and user processes
@@ -52,13 +52,9 @@ Progress (2023):
 
 Beyond normal contents, TODOs:
 
-- [ ] Optimization:
+- [x] Optimization:
     - [x] rv64 program instruction analysis, adjust decoding order [+11 pts]
     - [x] refactor decode operation with hash decoder and force jump table [+10 pts]
         - this is as far as we can do, cannot be equal to 1
-    - [ ] multi-launch cpu emulation, use pthread or sth. else
-    - [ ] branch prediction, use AI
-- [ ] Feature Requests:
-    - [ ] floating points support
 
 Documentation is in [./doc](./doc/main.md)
