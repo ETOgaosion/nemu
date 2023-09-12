@@ -44,8 +44,7 @@ Context *__am_irq_handle(Context *c) {
             uint64_t cause = c->mcause & ~((uint64_t)0x1 << 63);
             switch (cause) {
             case MTI:
-            case STI:
-                Log("Timer Interrupt");
+                ev.event = EVENT_IRQ_TIMER;
                 break;
             default:
                 ev.event = EVENT_ERROR;
@@ -75,10 +74,11 @@ Context *__am_irq_handle(Context *c) {
 }
 
 extern void __am_asm_trap(void);
+extern void __am_asm_trap_m(void);
 
 bool cte_init(Context *(*handler)(Event, Context *)) {
     // initialize exception entry
-    asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
+    asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap_m));
 
     // register event handler
     user_handler = handler;
@@ -90,11 +90,12 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
     Context *ctx = kstack.end - sizeof(Context);
     memset((void *)ctx, 0, sizeof(Context));
     ctx->gpr[reg_a0] = (uintptr_t)arg;
-    ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->gpr[reg_sp] = (uintptr_t)ctx - sizeof(Context);
     ctx->gpr[reg_tp] = (uintptr_t)ctx;
+    ctx->gpr[reg_ra] = (uintptr_t)__am_asm_trap_m;
     Log("kcontext: 0x%lx", (uintptr_t)ctx);
     ctx->mepc = (uintptr_t)entry;
-    ctx->mstatus = 0xa00001800;
+    ctx->mstatus = 0xa00001880;
     ctx->pdir = NULL;
     return ctx;
 }

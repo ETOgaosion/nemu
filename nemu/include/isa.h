@@ -71,6 +71,8 @@ enum exceptions {
     STORE_PAGE_FAULT = 15
 };
 
+#define IRQ_TIMER 0x8000000000000007  // for riscv64
+
 #ifndef isa_mmu_check
 int isa_mmu_check(vaddr_t vaddr, int len, int type);
 #endif

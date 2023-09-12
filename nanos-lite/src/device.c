@@ -31,7 +31,6 @@ size_t zero_write(const void *buf, size_t offset, size_t len) {
 }
 
 size_t serial_write(const void *buf, size_t offset, size_t len) {
-    yield();
     char *write_buf = (char *)buf;
     for (int i = 0; i < len; i++) {
         putch(write_buf[i]);
@@ -43,7 +42,6 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 static const char *names[] = {AM_KEYS(NAMEINIT)};
 
 size_t events_read(void *buf, size_t offset, size_t len) {
-    yield();
     AM_INPUT_KEYBRD_T ev = {0};
     ev = io_read(AM_INPUT_KEYBRD);
     if (ev.keycode == AM_KEY_NONE) {
@@ -73,7 +71,6 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
 }
 
 size_t fb_write(const void *buf, size_t offset, size_t len) {
-    yield();
     int actual_start_x = offset % display_width, actual_start_y = offset / display_width;
     if (offset + len > display_width * display_height) {
         len = display_width * display_height - offset;

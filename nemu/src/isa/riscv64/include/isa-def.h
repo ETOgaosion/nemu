@@ -27,8 +27,11 @@ typedef struct {
     word_t mepc;
     word_t mcause;
     word_t satp;
+    bool INTR;
 } riscv64_CPU_state;
 
+#define MSTATUS_MIE_BITS 0x8
+#define MSTATUS_MPIE_BITS 0x80
 #define MSTATUS_MPP_BITS 0x1800
 #define MSTATUS_SUM_BITS 0x40000
 #define MSTATUS_MXR_BITS 0x80000

@@ -6,7 +6,7 @@ in Department of Computer Science and Technology, Nanjing University.
 For the guide of this programming assignment,
 refer to https://nju-projectn.github.io/ics-pa-gitbook/ics2022/
 
-This repo use riscv64 arch.
+This repo use **riscv64** arch.
 
 Progress (2023):
 

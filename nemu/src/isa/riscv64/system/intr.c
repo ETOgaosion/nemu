@@ -33,6 +33,8 @@ void isa_raise_intr(Decode *s, word_t NO) {
     }
     cpu.mepc = s->pc;
     cpu.mstatus |= MSTATUS_MPP_BITS;
+    cpu.mstatus |= (cpu.mstatus & MSTATUS_MIE_BITS) << 4;
+    cpu.mstatus &= ~MSTATUS_MIE_BITS;
     g_nr_guest_inst_e++;
 
 #ifdef CONFIG_ETRACE
@@ -53,9 +55,17 @@ void isa_raise_intr(Decode *s, word_t NO) {
 
 vaddr_t isa_ret_intr() {
     cpu.mstatus &= ~MSTATUS_MPP_BITS;
+    cpu.mstatus |= (cpu.mstatus & MSTATUS_MPIE_BITS) >> 4;
+    cpu.mstatus |= MSTATUS_MPIE_BITS;
     return cpu.mepc;
 }
 
 word_t isa_query_intr() {
-    return INTR_EMPTY;
+    if (cpu.INTR && (cpu.mstatus & MSTATUS_MIE_BITS)) {
+        cpu.INTR = false;
+        return IRQ_TIMER;
+    }
+    else {
+        return INTR_EMPTY;
+    }
 }
