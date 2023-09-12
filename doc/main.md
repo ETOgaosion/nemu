@@ -79,8 +79,13 @@ Here are some holes (坑) that you can pre-read to avoid falling in:
 - Notice the bit masks, set them correctly
 - AM's `malloc` should be set carefully, separated from nanos' `new_page`. There is an easy way to resolve this: divide the free memory space. I've tried to mix them up, but failed, still have misunderstandable bugs.
 - Things that the lecture notes not mention
-    - context switch when trapping should change: **`sp` should not be the one used in user stack, but shall be set to kernel stack**. So not only `sp` needs to be used, but also **`tp` as trap pointer, pointing to a fixed context location of each process**. When user program trap in, the sp should be set to tp as context base location, and kernel tasks should execute with this kernel stack.
-    - But here is a problem: We need to support nested trap, because yield could happen in M mode. So we should put `mtvec` to a new kernel trap function `__am_asm_trap_m` as long as we enter `__am_asm_trap`. As we should support nested trap, we can simply make `sp` decrease `CONTEXT_SIZE` each time as original code. Current environment is at high priviledge mode, sp is on kernel stack of course.
+    - [This one mentioned in latter notes] context switch when trapping should change: **`sp` should not be the one used in user stack, but shall be set to kernel stack**. So not only `sp` needs to be used, but also **`tp` as trap pointer, pointing to a fixed context location of each process**. When user program trap in, the sp should be set to tp as context base location, and kernel tasks should execute with this kernel stack.
+    - Due to the complexity, we are not able to support nested interrupt:
+        - There are not only user processes, but also kernel threads.
+        - Thus we should implement 2 different trap mechanisms: context fixed or flexible.
+        - But it is difficult for tasks to be loaded at first time:
+            - kernel threads return way is different from user processes
+            - mtvec is hard to manage
 
 Here are bug recordings and solutions, maybe helpful:
 

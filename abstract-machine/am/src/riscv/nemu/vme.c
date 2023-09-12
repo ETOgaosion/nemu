@@ -106,7 +106,7 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
     Context *ctx = kstack.end - sizeof(Context);
     memset((void *)ctx, 0, sizeof(Context));
     ctx->gpr[reg_sp] = (uintptr_t)as->area.end;
-    ctx->gpr[reg_tp] = (uintptr_t)ctx;
+    ctx->mscratch = (uintptr_t)ctx;
     ctx->gpr[reg_ra] = (uintptr_t)__am_asm_trap;
     ctx->mepc = (uintptr_t)entry;
     ctx->mstatus = 0xa000c0080;

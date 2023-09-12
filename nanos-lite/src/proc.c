@@ -28,6 +28,7 @@ void hello_fun(void *arg) {
         printf("Hello World from Nanos-lite with arg '%d' for the ", *(int *)arg);
         printf("%dth time!\n", j);
         j++;
+        yield();
     }
 }
 
@@ -39,15 +40,15 @@ void init_proc() {
     Context *ctx = (Context *)malloc(sizeof(Context));
     ctx->gpr[reg_tp] = (uintptr_t)ctx;
     pcb_boot.cp = ctx;
-    __asm__ __volatile__("mv tp, %0" : : "r"(ctx) :);
+    __asm__ __volatile__("csrw mscratch, %0" : : "r"(ctx) :);
 
-    // int *arg1 = malloc(sizeof(int));
-    // *arg1 = 1;
+    int *arg1 = malloc(sizeof(int));
+    *arg1 = 1;
     // int *arg2 = malloc(sizeof(int));
     // *arg2 = 2;
-    // context_kload(&pcb[0], hello_fun, arg1);
+    context_kload(&pcb[0], hello_fun, arg1);
     // context_kload(&pcb[1], hello_fun, arg2);
-    char *argv[] = {"--skip", NULL};
+    char *argv[] = {"--skip-trademark", "--skip-loading-screen", NULL};
     // char *envp[] = {"PATH=/usr/bin:/bin", NULL};
     // context_uload(&pcb[0], "/bin/nterm", NULL, envp);
     context_uload(&pcb[1], "/bin/pal", argv, NULL);
@@ -71,10 +72,13 @@ void init_proc() {
     // naive_uload(NULL, "/bin/pal");
 }
 
+int times = 1;
+
 Context *schedule(Context *prev) {
     current->cp = prev;
-    // current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+    current = ((times++) % 1000 ? &pcb[0] : &pcb[1]);
+    // current = (current == &pcb[1] ? &pcb[0] : &pcb[1]);
     // Log("current == &pcb[0]: %d", current == &pcb[0]);
-    current = &pcb[1];
+    // current = &pcb[1];
     return current->cp;
 }

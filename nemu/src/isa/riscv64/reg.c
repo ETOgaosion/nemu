@@ -49,6 +49,9 @@ word_t *csr(int num) {
     case csr_mepc:
         return &cpu.mepc;
         break;
+    case csr_mscratch:
+        return &cpu.mscratch;
+        break;
     case csr_mcause:
         return &cpu.mcause;
         break;
@@ -71,6 +74,9 @@ const char *csr_name(int num) {
         break;
     case csr_mepc:
         return "mepc";
+        break;
+    case csr_mscratch:
+        return "mscratch";
         break;
     case csr_mcause:
         return "mcause";

@@ -54,6 +54,7 @@
 #define csr_satp 0x180
 #define csr_mstatus 0x300
 #define csr_mtvec 0x305
+#define csr_mscratch 0x340
 #define csr_mepc 0x341
 #define csr_mcause 0x342
 

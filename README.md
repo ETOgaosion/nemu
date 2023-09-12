@@ -45,7 +45,10 @@ Progress (2023):
     - [x] pa4-2: VME [9.11]
         - [x] VME Support
             - **THIS IS THE MOST DIFFICULT PART**, for more info like suggestions and bug record, check [./doc](./doc/main.md#VME)
-        - [x] nested trap support, S/U mode support
+        - [x] S/U mode support, stack context switch
+    - [x] pa4-3: TIE [9.12]
+        - [x] time-division multiplexing
+        - [x] preempt multiplexing
 
 Beyond normal contents, TODOs:
 

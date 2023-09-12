@@ -74,11 +74,10 @@ Context *__am_irq_handle(Context *c) {
 }
 
 extern void __am_asm_trap(void);
-extern void __am_asm_trap_m(void);
 
 bool cte_init(Context *(*handler)(Event, Context *)) {
     // initialize exception entry
-    asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap_m));
+    asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
 
     // register event handler
     user_handler = handler;
@@ -90,12 +89,12 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
     Context *ctx = kstack.end - sizeof(Context);
     memset((void *)ctx, 0, sizeof(Context));
     ctx->gpr[reg_a0] = (uintptr_t)arg;
-    ctx->gpr[reg_sp] = (uintptr_t)ctx - sizeof(Context);
-    ctx->gpr[reg_tp] = (uintptr_t)ctx;
-    ctx->gpr[reg_ra] = (uintptr_t)__am_asm_trap_m;
+    ctx->gpr[reg_sp] = (uintptr_t)ctx;
+    ctx->mscratch = (uintptr_t)ctx;
+    ctx->gpr[reg_ra] = (uintptr_t)__am_asm_trap;
     Log("kcontext: 0x%lx", (uintptr_t)ctx);
     ctx->mepc = (uintptr_t)entry;
-    ctx->mstatus = 0xa00001880;
+    ctx->mstatus = 0xa00001800;
     ctx->pdir = NULL;
     return ctx;
 }
