@@ -44,7 +44,7 @@ Progress (2023):
         - [x] all tests pass
     - [x] pa4-2: VME [9.11]
         - [x] VME Support
-            - **THIS IS THE MOST DIFFICULT PART**, for more info like suggestions, check [./doc](./doc/main.md#VME)
+            - **THIS IS THE MOST DIFFICULT PART**, for more info like suggestions and bug record, check [./doc](./doc/main.md#VME)
         - [x] nested trap support, S/U mode support
 
 Beyond normal contents, TODOs:

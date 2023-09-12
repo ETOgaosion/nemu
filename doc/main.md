@@ -1,4 +1,4 @@
-# NEMU Documentary
+# NEMU Documentation
 
 We built nemu for riscv64 architecture.
 
@@ -14,12 +14,12 @@ There is RISCV-G for both 32 bits and 64 bits instruction format, but RISCV-64 h
 
 We suggest not use llvm decoder to generate itrace, but use our own decoder information instead. Though decoder infomation, we can not only get instruction details, but also can know register and memory value as we like, thus sacrifice some performance but does great for debugging.
 
-mtrace only gather information in pread/pwrite.
+`mtrace` only gather information in `pread/pwrite`.
 
-ftrace is also in decode stage, we judge whether the operation is function call and ret. Riscv64 has some tricks, but due to our observation, they have these traits:
+`ftrace` is also in decode stage, we judge whether the operation is function call and ret. Riscv64 has some tricks, but due to our observation, they have these traits:
 
-- call: jalr or jal operation, dnpc is function address base
-- ret: jalr rd, rs1, [addr], [addr] is in function address scale, function depth > 0
+- `call`: `jalr` or `jal` operation, `dnpc` is function address base
+- `ret`: `jalr rd, rs1, [addr], [addr]` is in function address scale, function depth > 0
 
 #### Device
 
@@ -69,7 +69,10 @@ This is the **most difficult part** in the whole pa, for reasons below:
 - Lack of debug tools (Infrastructures)
     - Difftests not working anymore, data in fs is wrongly set
     - Test our experience to find real reason which causes the bug
-    - Log is the most sufficient tool, `mtrace` and `itrace` does a lot of help
+    - Log and Assert is the most sufficient tool, `mtrace` and `itrace` does a lot of help
+- System becomes complex, Failure is too far from Fault
+    - Think about reason (This method is tough for beginners, but is very useful to improve your understanding of the whole system)
+    - Use debug tools to check possible Faults
 
 Here are some holes (坑) that you can pre-read to avoid falling in:
 
@@ -77,4 +80,23 @@ Here are some holes (坑) that you can pre-read to avoid falling in:
 - AM's `malloc` should be set carefully, separated from nanos' `new_page`. There is an easy way to resolve this: divide the free memory space. I've tried to mix them up, but failed, still have misunderstandable bugs.
 - Things that the lecture notes not mention
     - context switch when trapping should change: **`sp` should not be the one used in user stack, but shall be set to kernel stack**. So not only `sp` needs to be used, but also **`tp` as trap pointer, pointing to a fixed context location of each process**. When user program trap in, the sp should be set to tp as context base location, and kernel tasks should execute with this kernel stack.
-    - But here is a problem: We need to support nested trap, because yield could happen in M mode. So we should put `mtvec` to a new kernel trap function `__am_asm_trap_m` as long as we enter `__am_asm_trap`. As we should support nested trap, we can simply make `sp` decrease each time as original code. Current environment is at high priviledge mode, sp is on kernel stack of course.
+    - But here is a problem: We need to support nested trap, because yield could happen in M mode. So we should put `mtvec` to a new kernel trap function `__am_asm_trap_m` as long as we enter `__am_asm_trap`. As we should support nested trap, we can simply make `sp` decrease `CONTEXT_SIZE` each time as original code. Current environment is at high priviledge mode, sp is on kernel stack of course.
+
+Here are bug recordings and solutions, maybe helpful:
+
+You may encounter:
+
+- Multiple times of page walk error - some vpn cannot be found on PTE page:
+    - Failure: Page should be mapped
+        - Fault: Page not map or map arguments wrong
+            - Sol: Think/Log to find where the map should be and fix it
+    - Failure: Page should not be mapped
+        - Fault: Map is wrongly implemented
+            - Sol: Check vme.c and mmu.c, make sure they are consistent
+    - Failure: Instruction is incorrent, not the same as binary dumped file when use pc to search
+        - Fault: vme or mmu is incorrect
+            - Sol: Check vme.c and mmu.c, make sure they are consistent, Notice the bitmarks
+- Incorrect program flow:
+    - Failure: Strange behavior after trap
+        - Fault: Trap is incorrect, kernel stack and context was written
+            - Sol: You can try what I mentioned above
